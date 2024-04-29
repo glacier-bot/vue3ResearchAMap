@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch, ref } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 import '@amap/amap-jsapi-types'
 import { Plus } from '@element-plus/icons-vue'
@@ -9,10 +9,13 @@ declare global {
     _AMapSecurityConfig: any;
   }
 }
-
 const props = defineProps(['newLng', 'newLat']) //{ newLng: String, newLat: String }
+const overlays = ref<any[]>([])
 
 let map: AMap.Map | null = null
+// console.log('运行setup')
+
+const Ddraw = (e: MouseEvent) => { (window as any).myDraw(e) }
 
 watch(
   props, (newVal) => {
@@ -62,13 +65,14 @@ watch(
 // }
 
 onMounted(() => {
+  // console.log('运行加载')
   window._AMapSecurityConfig = {
     securityJsCode: "db0fece5e68ddfcb041edbc7c6a454f5",
   };
   AMapLoader.load({
     key: 'aec583ffb42668304d01746bc91fe09f',
     version: '2.0',
-    plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType'],
+    plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool'],
   }).then((AMap) => {
     map = new AMap.Map('container', {
       viewMode: '2D',
@@ -78,12 +82,57 @@ onMounted(() => {
     const toolBar = new AMap.ToolBar()
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
+    const mouseTool = new AMap.MouseTool(map)
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
+    const draw = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      console.log('click draw: ', target.classList)
+      switch (true) {
+        case target.classList.contains('marker'): {
+          console.log('draw marker')
+          mouseTool.marker()
+          break
+        }
+        case target.classList.contains('polyline'): {
+          mouseTool.polyline({
+            strokeColor: '#80d8ff'
+          })
+          break
+        }
+        case target.classList.contains('polygon'): {
+          mouseTool.polygon({
+            fillColor: '#00b0ff',
+            strokeColor: '#80d8ff'
+          });
+          break;
+        }
+        case target.classList.contains('rectangle'): {
+          mouseTool.rectangle({
+            fillColor: '#00b0ff',
+            strokeColor: '#80d8ff'
+          });
+          break;
+        }
+        case target.classList.contains('circle'): {
+          mouseTool.circle({
+            fillColor: '#00b0ff',
+            strokeColor: '#80d8ff'
+          });
+          break;
+        }
+      }
+    }
+    (window as any).myDraw = draw
     map?.addControl(toolBar)
     map?.addControl(scale)
     map?.addControl(maptype)
     // map?.addControl(geolocation)
-    map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
+    // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
+    mouseTool.on('draw', (e: { obj: Object }) => {
+      console.log('draw e: ', e)
+      overlays.value.push(e.obj)
+      console.log(overlays.value)
+    })
   })
 })
 onUnmounted(() => {
@@ -92,6 +141,9 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div class="radio">
+    <el-button class="marker" type="primary" @click="Ddraw">绘制点</el-button>
+  </div>
   <el-button type="primary" :icon="Plus" circle />
   <div id="container" />
 </template>
@@ -109,6 +161,13 @@ onUnmounted(() => {
   top: 10px;
   left: 80px;
   position: absolute;
+  z-index: 1;
+}
+
+.radio {
+  position: absolute;
+  top: 50px;
+  left: 0px;
   z-index: 1;
 }
 </style>
