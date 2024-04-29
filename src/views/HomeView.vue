@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { provide, ref } from 'vue';
+import { ref } from 'vue';
 import AMap from '../components/AMap.vue'
 import Aside from '../components/AsideItem.vue'
 
-const latitute = ref(39.90923)
-const longtitute = ref(116.397428)
+const latitute = ref(0)
+const longtitute = ref(0)
 
 const handleValueChanged = (payload: { latitute: number, longtitute: number }) => {
-  // console.log('payload:', payload)
+  console.log('payload:', payload)
   latitute.value = payload.latitute
   longtitute.value = payload.longtitute
 }
 
-provide('location', [latitute, longtitute])
 
 </script>
 
@@ -23,7 +22,7 @@ provide('location', [latitute, longtitute])
     </el-aside>
     <el-container>
       <el-main>
-        <AMap />
+        <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" />
       </el-main>
     </el-container>
   </el-container>
