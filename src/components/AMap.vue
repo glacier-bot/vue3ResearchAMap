@@ -11,8 +11,9 @@ declare global {
   }
 }
 
-const props = defineProps(['newLng', 'newLat']) //{ newLng: String, newLat: String }
+const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String, newLat: String }
 const overlays = ref<any[]>([])
+const ifEdit = ref(false)
 
 let map: AMap.Map | null = null
 // console.log('运行setup')
@@ -30,7 +31,9 @@ watch(
   props, (newVal) => {
     //   console.log('newVal: ', newVal)
     if (!newVal) return
-    const newLocation = [parseFloat(props.newLng), parseFloat(props.newLat)]
+    ifEdit.value = newVal.drawStatus === 'selected' ? true : false
+    if (newVal.newLng * newVal.newLat === 0) return
+    const newLocation = [parseFloat(newVal.newLng), parseFloat(newVal.newLat)]
     AMap.convertFrom(newLocation, 'gps', (status: string, result: { info: string, locations: Array<{ lng: number, lat: number }> }) => {
       if (status === 'complete') {
         if (result.info === 'ok') {
@@ -153,7 +156,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="radio">
+  <div v-show="ifEdit" class="radio">
     <!-- <el-button class="marker" type="primary" @click="Ddraw">绘制点</el-button> -->
     <SwitchButtons @on-switch-changed="handleSwitchChange" />
   </div>
@@ -178,6 +181,7 @@ onUnmounted(() => {
 }
 
 .radio {
+  // display: none;
   position: absolute;
   top: 50px;
   left: 170px;

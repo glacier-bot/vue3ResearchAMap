@@ -5,11 +5,16 @@ import Aside from '../components/AsideItem.vue'
 
 const latitute = ref(0)
 const longtitute = ref(0)
+const drawStatus = ref('')
 
 const handleValueChanged = (payload: { latitute: number, longtitute: number }) => {
-  console.log('payload:', payload)
+  // console.log('payload:', payload)
   latitute.value = payload.latitute
   longtitute.value = payload.longtitute
+}
+const handleDrawSelected = (payload: string) => {
+  // console.log('select: ', payload)
+  drawStatus.value = payload
 }
 
 
@@ -18,11 +23,11 @@ const handleValueChanged = (payload: { latitute: number, longtitute: number }) =
 <template>
   <el-container>
     <el-aside width="150px">
-      <Aside @on-value-changed="handleValueChanged" />
+      <Aside @on-value-changed="handleValueChanged" @on-draw-selected="handleDrawSelected" />
     </el-aside>
     <el-container>
       <el-main>
-        <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" />
+        <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" :draw-status="`${drawStatus}`" />
       </el-main>
     </el-container>
   </el-container>

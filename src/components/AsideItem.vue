@@ -5,10 +5,10 @@ import { Location, Setting, Edit } from '@element-plus/icons-vue'
 
 const latitute = ref(0)
 const longtitute = ref(0)
-const value2 = ref(false)
 
 const emit = defineEmits({
-  'onValueChanged': (payload: { latitute: number, longtitute: number }) => true
+  'onValueChanged': (payload: { latitute: number, longtitute: number }) => true,
+  'onDrawSelected': (payload: string) => true
 })
 
 watch([latitute, longtitute], (newVal, oldVal) => {
@@ -23,9 +23,14 @@ const handleSelect = (key: string) => {
     case '1':
       // console.log('Location')
       getGeoLocation()
+      emit('onDrawSelected', 'canceled')
+      break
+    case '2':
+      emit('onDrawSelected', 'selected')
       break
     case '9':
       // console.log('Setting')
+      emit('onDrawSelected', 'canceled')
       break
   }
 }
