@@ -1,10 +1,11 @@
 <!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Location, Setting } from '@element-plus/icons-vue'
+import { Location, Setting, Edit } from '@element-plus/icons-vue'
 
 const latitute = ref(0)
 const longtitute = ref(0)
+const value2 = ref(false)
 
 const emit = defineEmits({
   'onValueChanged': (payload: { latitute: number, longtitute: number }) => true
@@ -44,16 +45,24 @@ const getGeoLocation = () => {
 </script>
 
 <template>
-  <el-menu default-active="1" :collapse="true" @select="handleSelect">
+  <el-menu :collapse="true" @select="handleSelect">
     <el-menu-item index="1">
       <el-icon>
         <Location />
       </el-icon>
+      定位
+    </el-menu-item>
+    <el-menu-item index="2">
+      <el-icon>
+        <Edit />
+      </el-icon>
+      创建覆盖物
     </el-menu-item>
     <el-menu-item index="9">
       <el-icon>
         <Setting />
       </el-icon>
+      设置
     </el-menu-item>
   </el-menu>
   <div id="location" v-show="false">
@@ -62,4 +71,8 @@ const getGeoLocation = () => {
   </div>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.el-menu {
+  width: 150px;
+}
+</style>

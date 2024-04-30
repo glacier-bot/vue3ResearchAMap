@@ -17,7 +17,7 @@ const handleValueChanged = (payload: { latitute: number, longtitute: number }) =
 
 <template>
   <el-container>
-    <el-aside width="64px">
+    <el-aside width="150px">
       <Aside @on-value-changed="handleValueChanged" />
     </el-aside>
     <el-container>

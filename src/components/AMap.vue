@@ -3,19 +3,28 @@ import { onMounted, onUnmounted, watch, ref } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 import '@amap/amap-jsapi-types'
 import { Plus } from '@element-plus/icons-vue'
+import SwitchButtons from './buttons/SwitchButtons.vue'
 
 declare global {
   interface Window {
     _AMapSecurityConfig: any;
   }
 }
+
 const props = defineProps(['newLng', 'newLat']) //{ newLng: String, newLat: String }
 const overlays = ref<any[]>([])
 
 let map: AMap.Map | null = null
 // console.log('运行setup')
 
-const Ddraw = (e: MouseEvent) => { (window as any).myDraw(e) }
+const Ddraw = (e: string) => { (window as any).myMapTools.draw(e) }
+const DcloseMouseTool = () => { (window as any).myMapTools.closeMouseTool() }
+
+const handleSwitchChange = (e: { name: string, status: boolean }) => {
+  // console.log('switch changed: ', e)
+  DcloseMouseTool()
+  if (e.status) { Ddraw(e.name) }
+}
 
 watch(
   props, (newVal) => {
@@ -84,36 +93,34 @@ onMounted(() => {
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
-    const draw = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      console.log('click draw: ', target.classList)
-      switch (true) {
-        case target.classList.contains('marker'): {
-          console.log('draw marker')
+    const draw = (e: string) => {
+      switch (e) {
+        case 'value1': {
+          // console.log('draw marker')
           mouseTool.marker()
           break
         }
-        case target.classList.contains('polyline'): {
+        case 'value2': {
           mouseTool.polyline({
             strokeColor: '#80d8ff'
           })
           break
         }
-        case target.classList.contains('polygon'): {
+        case 'value3': {
           mouseTool.polygon({
             fillColor: '#00b0ff',
             strokeColor: '#80d8ff'
           });
           break;
         }
-        case target.classList.contains('rectangle'): {
+        case 'value4': {
           mouseTool.rectangle({
             fillColor: '#00b0ff',
             strokeColor: '#80d8ff'
           });
           break;
         }
-        case target.classList.contains('circle'): {
+        case 'value5': {
           mouseTool.circle({
             fillColor: '#00b0ff',
             strokeColor: '#80d8ff'
@@ -122,16 +129,21 @@ onMounted(() => {
         }
       }
     }
-    (window as any).myDraw = draw
+    const closeMouseTool = () => { mouseTool.close() }
+
+    (window as any).myMapTools = {
+      draw: draw,
+      closeMouseTool: closeMouseTool,
+    }
     map?.addControl(toolBar)
     map?.addControl(scale)
     map?.addControl(maptype)
     // map?.addControl(geolocation)
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
     mouseTool.on('draw', (e: { obj: Object }) => {
-      console.log('draw e: ', e)
+      // console.log('draw e: ', e)
       overlays.value.push(e.obj)
-      console.log(overlays.value)
+      console.log('overlays: ', overlays.value)
     })
   })
 })
@@ -142,7 +154,8 @@ onUnmounted(() => {
 
 <template>
   <div class="radio">
-    <el-button class="marker" type="primary" @click="Ddraw">绘制点</el-button>
+    <!-- <el-button class="marker" type="primary" @click="Ddraw">绘制点</el-button> -->
+    <SwitchButtons @on-switch-changed="handleSwitchChange" />
   </div>
   <el-button type="primary" :icon="Plus" circle />
   <div id="container" />
@@ -159,7 +172,7 @@ onUnmounted(() => {
 
 .el-button {
   top: 10px;
-  left: 80px;
+  left: 170px;
   position: absolute;
   z-index: 1;
 }
@@ -167,7 +180,45 @@ onUnmounted(() => {
 .radio {
   position: absolute;
   top: 50px;
-  left: 0px;
+  left: 170px;
   z-index: 1;
 }
 </style>
+// const drawtest = (e: MouseEvent) => {
+// const target = e.target as HTMLElement
+// console.log('click draw: ', target.classList)
+// switch (true) {
+// case target.classList.contains('marker'): {
+// console.log('draw marker')
+// mouseTool.marker()
+// break
+// }
+// case target.classList.contains('polyline'): {
+// mouseTool.polyline({
+// strokeColor: '#80d8ff'
+// })
+// break
+// }
+// case target.classList.contains('polygon'): {
+// mouseTool.polygon({
+// fillColor: '#00b0ff',
+// strokeColor: '#80d8ff'
+// });
+// break;
+// }
+// case target.classList.contains('rectangle'): {
+// mouseTool.rectangle({
+// fillColor: '#00b0ff',
+// strokeColor: '#80d8ff'
+// });
+// break;
+// }
+// case target.classList.contains('circle'): {
+// mouseTool.circle({
+// fillColor: '#00b0ff',
+// strokeColor: '#80d8ff'
+// });
+// break;
+// }
+// }
+// }
