@@ -67,12 +67,17 @@ const handleClick = () => {
       <el-button text @click.left="handleClick">清空覆盖物</el-button>
     </el-col>
   </el-row>
+  <el-row class="switch-text" :gutter="16"><el-col><el-text size="small" type="info">
+        提示：请在结束绘制和编辑后删除覆盖物<br />
+        否则会出现编辑用的手柄无法删除的bug
+      </el-text></el-col></el-row>
 </template>
 
 <style scoped lang="less">
 .switch-table1,
 .switch-table2,
-.switch-table3 {
+.switch-table3,
+.switch-text {
   background-color: white;
 }
 
@@ -80,7 +85,7 @@ const handleClick = () => {
   padding-top: 5px;
 }
 
-.switch-table3 {
+.switch-text {
   padding-bottom: 5px;
 }
 </style>
