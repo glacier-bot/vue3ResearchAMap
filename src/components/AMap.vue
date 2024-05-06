@@ -169,13 +169,16 @@ onMounted(() => {
       const Editor = editorMap[e.obj.CLASS_NAME as keyof typeof editorMap]
       if (Editor) {
         const overlayEditorTool = new Editor(map, e.obj)
-        e.obj.on('rightclick', () => {
+        e.obj.on('click', () => {
           overlayEditor.value = !overlayEditor.value
           if (overlayEditor.value) {
             overlayEditorTool.open()
           } else {
             overlayEditorTool.close()
           }
+        })
+        e.obj.on('rightclick', () => {
+          map?.remove(e.obj as typeof overlays.value[0])
         })
       }
       // 被上面的if代替
