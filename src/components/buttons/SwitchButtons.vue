@@ -67,10 +67,14 @@ const handleClick = () => {
       <el-button text @click.left="handleClick">清空覆盖物</el-button>
     </el-col>
   </el-row>
-  <el-row class="switch-text" :gutter="16"><el-col><el-text size="small" type="info">
+  <el-row class="switch-text" :gutter="16">
+    <el-col>
+      <el-text size="small" type="info">
         提示：请在结束绘制和编辑后删除覆盖物<br />
         否则会出现编辑用的手柄无法删除的bug
-      </el-text></el-col></el-row>
+      </el-text>
+    </el-col>
+  </el-row>
 </template>
 
 <style scoped lang="less">

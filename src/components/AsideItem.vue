@@ -23,14 +23,14 @@ const handleSelect = (key: string) => {
     case '1':
       // console.log('Location')
       getGeoLocation()
-      emit('onDrawSelected', 'canceled')
+      emit('onDrawSelected', 'location')
       break
     case '2':
       emit('onDrawSelected', 'selected')
       break
     case '9':
       // console.log('Setting')
-      emit('onDrawSelected', 'canceled')
+      emit('onDrawSelected', 'settings')
       break
   }
 }

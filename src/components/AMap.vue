@@ -9,6 +9,14 @@ declare global {
   interface Window {
     _AMapSecurityConfig: any;
   }
+  interface mouseToolEvent {
+    obj: {
+      CLASS_NAME: string,
+      on: (event: string, f: Function) => void,
+      getBounds: () => { northEast: { lat: number, lng: number } },
+      getPosition: () => [number, number]
+    }
+  }
 }
 const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String, newLat: String }
 const overlays = ref<any[]>([])
@@ -40,9 +48,25 @@ watch(
   props, (newVal) => {
     //   console.log('newVal: ', newVal)
     if (!newVal) return
-    ifEdit.value = newVal.drawStatus === 'selected' ? true : false
+    // ifEdit.value = newVal.drawStatus === 'selected' ? true : false
+    switch (newVal.drawStatus) {
+      case 'location': {
+        ifEdit.value = false
+        break
+      }
+      case 'selected': {
+        ifEdit.value = true
+        break
+      }
+      case 'settings': {
+        ifEdit.value = false
+        break
+      }
+    }
+    // console.log('ifEdit: ', ifEdit.value)
     if (newVal.newLng * newVal.newLat === 0) return
     const newLocation = [parseFloat(newVal.newLng), parseFloat(newVal.newLat)]
+    if (newVal.drawStatus !== "location") return
     AMap.convertFrom(newLocation, 'gps', (status: string, result: { info: string, locations: Array<{ lng: number, lat: number }> }) => {
       if (status === 'complete') {
         if (result.info === 'ok') {
@@ -103,6 +127,8 @@ onMounted(() => {
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
+    const aContextMenu = new AMap.ContextMenu()
+    aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
     const editorMap = {
       'Overlay.Polygon': AMap.PolyEditor,
       'Overlay.Polyline': AMap.PolyEditor,
@@ -147,6 +173,8 @@ onMounted(() => {
       }
     }
     const closeMouseTool = (b: boolean = false) => { mouseTool.close(b) }
+    const afterContextClick = () => { aContextMenu.close() }
+    document.addEventListener('click', afterContextClick)
     const removeOverlay = () => {
       console.log('remove overlay')
       map?.remove(overlays.value)
@@ -155,17 +183,19 @@ onMounted(() => {
     (window as any).myMapTools = {
       draw: draw,
       closeMouseTool: closeMouseTool,
-      removeOverlay: removeOverlay
+      removeOverlay: removeOverlay,
     }
     map?.addControl(toolBar)
     map?.addControl(scale)
     map?.addControl(maptype)
     // map?.addControl(geolocation)
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
-    mouseTool.on('draw', (e: { obj: { CLASS_NAME: string, on: (event: string, f: Function) => void } }) => {
+    mouseTool.on('draw', (e: mouseToolEvent) => {
       // console.log('draw e: ', e)
       overlays.value.push(e.obj)
       console.log('overlays: ', overlays.value)
+      const removeOverlay = () => { map?.remove(e.obj as typeof overlays.value[0]) }
+      (window as any).myOverlayTools = { removeOverlay: removeOverlay }
       const Editor = editorMap[e.obj.CLASS_NAME as keyof typeof editorMap]
       if (Editor) {
         const overlayEditorTool = new Editor(map, e.obj)
@@ -178,7 +208,15 @@ onMounted(() => {
           }
         })
         e.obj.on('rightclick', () => {
-          map?.remove(e.obj as typeof overlays.value[0])
+          // map?.remove(e.obj as typeof overlays.value[0])
+          // 待办：在marker上右键打不开菜单
+          // console.log('right click', e.obj.getPosition())
+          // if (e.obj.CLASS_NAME === 'AMap.Marker') {
+          //   aContextMenu.open(map, e.obj)
+          // } else {
+          //   aContextMenu.open(map, [e.obj.getBounds().northEast.lng, e.obj.getBounds().northEast.lat])
+          // }
+          aContextMenu.open(map, [e.obj.getBounds().northEast.lng, e.obj.getBounds().northEast.lat])
         })
       }
       // 被上面的if代替
