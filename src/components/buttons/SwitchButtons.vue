@@ -10,7 +10,8 @@ const value5 = ref(false) //控制圆形开关
 const arrSwitch = [value1, value2, value3, value4, value5]
 
 const emit = defineEmits({
-  'onSwitchChanged': (payload: { name: string, status: boolean }) => true
+  'onSwitchChanged': (payload: { name: string, status: boolean }) => true,
+  'onClearClick': (payload: boolean) => true
 })
 
 const exclusiveTrue = (id: number) => {
@@ -31,6 +32,9 @@ const handlePolylineChange = handleSwitchChange(2)
 const handlePolygonChange = handleSwitchChange(3)
 const handleRectangleChange = handleSwitchChange(4)
 const handleCircleChange = handleSwitchChange(5)
+const handleClick = () => {
+  emit('onClearClick', true)
+}
 </script>
 
 <template>
@@ -55,9 +59,12 @@ const handleCircleChange = handleSwitchChange(5)
     </el-col>
   </el-row>
   <el-row class="switch-table3" :gutter="16">
-    <el-col>
+    <el-col :span=11>
       <el-switch v-model="value5" inline-prompt style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
         active-text="开始绘制圆" inactive-text="结束绘制圆" @change="handleCircleChange" />
+    </el-col>
+    <el-col :span="12">
+      <el-button text @click.left="handleClick">清空覆盖物</el-button>
     </el-col>
   </el-row>
 </template>

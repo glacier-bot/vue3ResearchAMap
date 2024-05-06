@@ -10,21 +10,30 @@ declare global {
     _AMapSecurityConfig: any;
   }
 }
-
 const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String, newLat: String }
 const overlays = ref<any[]>([])
 const ifEdit = ref(false)
+const overlayEditor = ref(false)
 
 let map: AMap.Map | null = null
 // console.log('运行setup')
 
 const Ddraw = (e: string) => { (window as any).myMapTools.draw(e) }
-const DcloseMouseTool = () => { (window as any).myMapTools.closeMouseTool() }
+const DcloseMouseTool = () => { (window as any).myMapTools.closeMouseTool(false) }
+const removeOverlay = () => { (window as any).myMapTools.removeOverlay() }
+const closeMouseTool = () => { (window as any).myMapTools.closeMouseTool(true) }
 
 const handleSwitchChange = (e: { name: string, status: boolean }) => {
   // console.log('switch changed: ', e)
   DcloseMouseTool()
   if (e.status) { Ddraw(e.name) }
+}
+const handleClearClick = (e: boolean) => {
+  if (e) {
+    console.log('clear overlay')
+    closeMouseTool()
+    removeOverlay()
+  }
 }
 
 watch(
@@ -75,7 +84,6 @@ watch(
 //     }
 //   })
 // }
-
 onMounted(() => {
   // console.log('运行加载')
   window._AMapSecurityConfig = {
@@ -84,7 +92,7 @@ onMounted(() => {
   AMapLoader.load({
     key: 'aec583ffb42668304d01746bc91fe09f',
     version: '2.0',
-    plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool'],
+    plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool', 'AMap.PolyEditor', 'AMap.RectangleEditor', 'AMap.CircleEditor'],
   }).then((AMap) => {
     map = new AMap.Map('container', {
       viewMode: '2D',
@@ -95,6 +103,12 @@ onMounted(() => {
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
+    const editorMap = {
+      'Overlay.Polygon': AMap.PolyEditor,
+      'Overlay.Polyline': AMap.PolyEditor,
+      'Overlay.Rectangle': AMap.RectangleEditor,
+      'Overlay.Circle': AMap.CircleEditor
+    }
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
     const draw = (e: string) => {
       switch (e) {
@@ -132,21 +146,77 @@ onMounted(() => {
         }
       }
     }
-    const closeMouseTool = () => { mouseTool.close() }
-
+    const closeMouseTool = (b: boolean = false) => { mouseTool.close(b) }
+    const removeOverlay = () => {
+      console.log('remove overlay')
+      map?.remove(overlays.value)
+      overlays.value = []
+    }
     (window as any).myMapTools = {
       draw: draw,
       closeMouseTool: closeMouseTool,
+      removeOverlay: removeOverlay
     }
     map?.addControl(toolBar)
     map?.addControl(scale)
     map?.addControl(maptype)
     // map?.addControl(geolocation)
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
-    mouseTool.on('draw', (e: { obj: Object }) => {
+    mouseTool.on('draw', (e: { obj: { CLASS_NAME: string, on: (event: string, f: Function) => void } }) => {
       // console.log('draw e: ', e)
       overlays.value.push(e.obj)
       console.log('overlays: ', overlays.value)
+      const Editor = editorMap[e.obj.CLASS_NAME as keyof typeof editorMap]
+      if (Editor) {
+        const overlayEditorTool = new Editor(map, e.obj)
+        e.obj.on('rightclick', () => {
+          overlayEditor.value = !overlayEditor.value
+          if (overlayEditor.value) {
+            overlayEditorTool.open()
+          } else {
+            overlayEditorTool.close()
+          }
+        })
+      }
+      // 被上面的if代替
+      // switch (e.obj.CLASS_NAME) {
+      //   case 'Overlay.Polygon' || 'Overlay.Polyline': {
+      //     const overlayEditorTool = new AMap.PolyEditor(map, e.obj)
+      //     e.obj.on('rightclick', () => {
+      //       overlayEditor.value = !overlayEditor.value
+      //       if (overlayEditor.value) {
+      //         overlayEditorTool.open()
+      //       } else {
+      //         overlayEditorTool.close()
+      //       }
+      //     })
+      //     break
+      //   }
+      //   case 'Overlay.Rectangle': {
+      //     const overlayEditorTool = new AMap.RectangleEditor(map, e.obj)
+      //     e.obj.on('rightclick', () => {
+      //       overlayEditor.value = !overlayEditor.value
+      //       if (overlayEditor.value) {
+      //         overlayEditorTool.open()
+      //       } else {
+      //         overlayEditorTool.close()
+      //       }
+      //     })
+      //     break
+      //   }
+      //   case 'Overlay.Circle': {
+      //     const overlayEditorTool = new AMap.CircleEditor(map, e.obj)
+      //     e.obj.on('rightclick', () => {
+      //       overlayEditor.value = !overlayEditor.value
+      //       if (overlayEditor.value) {
+      //         overlayEditorTool.open()
+      //       } else {
+      //         overlayEditorTool.close()
+      //       }
+      //     })
+      //     break
+      //   }
+      // }
     })
   })
 })
@@ -158,7 +228,7 @@ onUnmounted(() => {
 <template>
   <div v-show="ifEdit" class="radio">
     <!-- <el-button class="marker" type="primary" @click="Ddraw">绘制点</el-button> -->
-    <SwitchButtons @on-switch-changed="handleSwitchChange" />
+    <SwitchButtons @on-switch-changed="handleSwitchChange" @on-clear-click="handleClearClick" />
   </div>
   <el-button type="primary" :icon="Plus" circle />
   <div id="container" />
