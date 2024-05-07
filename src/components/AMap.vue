@@ -127,8 +127,8 @@ onMounted(() => {
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
-    const aContextMenu = new AMap.ContextMenu()
-    aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
+    // const aContextMenu = new AMap.ContextMenu()
+    // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
     const editorMap = {
       'Overlay.Polygon': AMap.PolyEditor,
       'Overlay.Polyline': AMap.PolyEditor,
@@ -173,8 +173,8 @@ onMounted(() => {
       }
     }
     const closeMouseTool = (b: boolean = false) => { mouseTool.close(b) }
-    const afterContextClick = () => { aContextMenu.close() }
-    document.addEventListener('click', afterContextClick)
+    // const afterContextClick = () => { aContextMenu.close() }
+    // document.addEventListener('click', afterContextClick)
     const removeOverlay = () => {
       console.log('remove overlay')
       map?.remove(overlays.value)
@@ -208,7 +208,7 @@ onMounted(() => {
           }
         })
         e.obj.on('rightclick', () => {
-          // map?.remove(e.obj as typeof overlays.value[0])
+          map?.remove(e.obj as typeof overlays.value[0])
           // 待办：在marker上右键打不开菜单
           // console.log('right click', e.obj.getPosition())
           // if (e.obj.CLASS_NAME === 'AMap.Marker') {
@@ -216,7 +216,7 @@ onMounted(() => {
           // } else {
           //   aContextMenu.open(map, [e.obj.getBounds().northEast.lng, e.obj.getBounds().northEast.lat])
           // }
-          aContextMenu.open(map, [e.obj.getBounds().northEast.lng, e.obj.getBounds().northEast.lat])
+          // aContextMenu.open(map, [e.obj.getBounds().northEast.lng, e.obj.getBounds().northEast.lat])
         })
       }
       // 被上面的if代替
