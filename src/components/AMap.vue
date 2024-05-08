@@ -19,6 +19,7 @@ declare global {
       getPosition: () => [number, number],
       setExtData: (ext: any) => void,
       getExtData: () => any,
+      setMap: (map: any) => void,
     }
   }
 }
@@ -60,19 +61,55 @@ const handleArrowDown = () => {
   console.log('down')
   optLocation.value = [optLocation.value[0], optLocation.value[1] - 0.01]
   locationMarker?.setPosition(optLocation.value)
+  distanceOverlays()
 }
 const handleArrowLeft = () => {
   console.log('left')
   optLocation.value = [optLocation.value[0] - 0.01, optLocation.value[1]]
   locationMarker?.setPosition(optLocation.value)
+  distanceOverlays()
 }
 const handleArrowRight = () => {
   console.log('right')
   optLocation.value = [optLocation.value[0] + 0.01, optLocation.value[1]]
   locationMarker?.setPosition(optLocation.value)
+  distanceOverlays()
 }
 const distanceOverlays = () => {
-  console.log('distance overlays: ', overlays.value)
+  // console.log('distance overlays: ', overlays.value)
+  if (!overlays.value) return
+  overlays.value.forEach((overlay) => {
+    // console.log('overlay class name: ', overlay.className)
+    switch (overlay.className) {
+      case 'AMap.Marker': {
+        //计算两点之间的距离
+        const pointDistance = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.getPosition())
+        console.log('pointDistance: ', pointDistance)
+        break
+      }
+      case 'Overlay.Polyline': {
+        //计算点到直线的距离
+        const lineDistance = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, overlay.getPath())
+        console.log('lineDistance: ', lineDistance)
+        break
+      }
+      case 'Overlay.Circle': {
+        //计算点到圆心的距离与圆半径的关系
+        const toCircleCenter = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.getCenter())
+        const pointCircle = toCircleCenter - overlay.getRadius() <= 0 ? true : false
+        // console.log('toCircleCenter: ', toCircleCenter)
+        // console.log('radius: ', overlay.getRadius())
+        console.log('pointCircle: ', pointCircle)
+        break
+      }
+      default: {
+        //判断是否在区域内
+        const pointRing = AMap.GeometryUtil.isPointInRing(locationMarker?.getPosition() as any, overlay.getPath())
+        console.log('pointRing: ', pointRing)
+        break
+      }
+    }
+  })
 }
 watch(
   props, (newVal) => {
@@ -160,7 +197,13 @@ onMounted(() => {
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
-    locationMarker = new AMap.Marker({ position: optLocation.value })
+    locationMarker = new AMap.Marker({
+      position: optLocation.value,
+      icon: new AMap.Icon({
+        image: '../public/map-158493_1280.png',
+        imageSize: new AMap.Size(18, 28),
+      })
+    })
     // const aContextMenu = new AMap.ContextMenu()
     // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
     const editorMap = {
@@ -260,7 +303,7 @@ onMounted(() => {
           //   console.log('obj id: ', e.obj.getExtData().id)
           // })
           // console.log(overlays.value)
-          // 待办：在marker上右键打不开菜单
+          // **********************************************************待办：在marker上右键没用，打不开菜单***********************************
           // console.log('right click', e.obj.getPosition())
           // if (e.obj.CLASS_NAME === 'AMap.Marker') {
           //   aContextMenu.open(map, e.obj)
