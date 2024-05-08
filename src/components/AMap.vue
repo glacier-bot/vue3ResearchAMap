@@ -192,6 +192,7 @@ onMounted(() => {
       viewMode: '2D',
       zoom: 12,
       center: [116.397428, 39.90923],
+      showIndoorMap:true,
     })
     const toolBar = new AMap.ToolBar()
     const scale = new AMap.Scale()
