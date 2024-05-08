@@ -277,6 +277,9 @@ onMounted(() => {
       const Editor = editorMap[e.obj.CLASS_NAME as keyof typeof editorMap]
       if (Editor) {
         const overlayEditorTool = new Editor(map, e.obj)
+        if (e.obj.CLASS_NAME === 'Overlay.Polygon') {
+          overlayEditorTool.addAdsorbPolygons(e.obj)
+        }
         e.obj.on('click', () => {
           if (overlayEditorTool) { overlayEditorTool.close() }
           overlayEditor.value = !overlayEditor.value
@@ -290,6 +293,7 @@ onMounted(() => {
           // console.log('em: ', em.target.getExtData().id)
           overlays.value = overlays.value.filter((overlay) => {
             // map?.remove(e.obj as typeof overlays.value[0])
+            overlayEditorTool.close()
             return overlay.getExtData().id !== e.obj.getExtData().id
             // console.log('overlay.getExtData().id: ', overlay.getExtData().id)
             // console.log('em.target.getExtData().id: ', em.target.getExtData().id)
