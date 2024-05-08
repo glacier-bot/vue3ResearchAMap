@@ -2,8 +2,9 @@
 import { onMounted, onUnmounted, watch, ref } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 import '@amap/amap-jsapi-types'
-import { Plus } from '@element-plus/icons-vue'
+// import { Plus } from '@element-plus/icons-vue'
 import SwitchButtons from './buttons/SwitchButtons.vue'
+import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 
 declare global {
   interface Window {
@@ -12,9 +13,12 @@ declare global {
   interface mouseToolEvent {
     obj: {
       CLASS_NAME: string,
+      _amap_id: number,
       on: (event: string, f: Function) => void,
       getBounds: () => { northEast: { lat: number, lng: number } },
-      getPosition: () => [number, number]
+      getPosition: () => [number, number],
+      setExtData: (ext: any) => void,
+      getExtData: () => any,
     }
   }
 }
@@ -22,8 +26,11 @@ const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String
 const overlays = ref<any[]>([])
 const ifEdit = ref(false)
 const overlayEditor = ref(false)
+const optLocation = ref<[number, number]>([0, 0])
+// const locationMarker = new window.AMap.Marker({})
 
 let map: AMap.Map | null = null
+let locationMarker: AMap.Marker | null = null
 // console.log('运行setup')
 
 const Ddraw = (e: string) => { (window as any).myMapTools.draw(e) }
@@ -43,7 +50,30 @@ const handleClearClick = (e: boolean) => {
     removeOverlay()
   }
 }
-
+const handleArrowUp = () => {
+  console.log('up')
+  optLocation.value = [optLocation.value[0], optLocation.value[1] + 0.01]
+  locationMarker?.setPosition(optLocation.value)
+  distanceOverlays()
+}
+const handleArrowDown = () => {
+  console.log('down')
+  optLocation.value = [optLocation.value[0], optLocation.value[1] - 0.01]
+  locationMarker?.setPosition(optLocation.value)
+}
+const handleArrowLeft = () => {
+  console.log('left')
+  optLocation.value = [optLocation.value[0] - 0.01, optLocation.value[1]]
+  locationMarker?.setPosition(optLocation.value)
+}
+const handleArrowRight = () => {
+  console.log('right')
+  optLocation.value = [optLocation.value[0] + 0.01, optLocation.value[1]]
+  locationMarker?.setPosition(optLocation.value)
+}
+const distanceOverlays = () => {
+  console.log('distance overlays: ', overlays.value)
+}
 watch(
   props, (newVal) => {
     //   console.log('newVal: ', newVal)
@@ -67,15 +97,18 @@ watch(
     if (newVal.newLng * newVal.newLat === 0) return
     const newLocation = [parseFloat(newVal.newLng), parseFloat(newVal.newLat)]
     if (newVal.drawStatus !== "location") return
+
     AMap.convertFrom(newLocation, 'gps', (status: string, result: { info: string, locations: Array<{ lng: number, lat: number }> }) => {
       if (status === 'complete') {
         if (result.info === 'ok') {
           const deltaLat = 31.343713 - 31.138115
           const deltaLng = 121.269525 - 121.104609
-          const optLocation: [number, number] = [result.locations[0].lng + deltaLng, result.locations[0].lat + deltaLat]
-          map?.panTo(optLocation)
+          optLocation.value = [result.locations[0].lng + deltaLng, result.locations[0].lat + deltaLat]
+          map?.panTo(optLocation.value)
+          locationMarker?.setPosition(optLocation.value)
+          if (!locationMarker) { return }
           map?.add(
-            new AMap.Marker({ position: optLocation })
+            locationMarker
           )
         }
       }
@@ -127,6 +160,7 @@ onMounted(() => {
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
+    locationMarker = new AMap.Marker({ position: optLocation.value })
     // const aContextMenu = new AMap.ContextMenu()
     // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
     const editorMap = {
@@ -140,7 +174,7 @@ onMounted(() => {
       switch (e) {
         case 'value1': {
           // console.log('draw marker')
-          mouseTool.marker()
+          mouseTool.marker({ draggable: true })
           break
         }
         case 'value2': {
@@ -192,14 +226,16 @@ onMounted(() => {
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
     mouseTool.on('draw', (e: mouseToolEvent) => {
       // console.log('draw e: ', e)
+      e.obj.setExtData({ id: new Date().valueOf().toString() })
       overlays.value.push(e.obj)
-      console.log('overlays: ', overlays.value)
+      // console.log('overlays: ', overlays.value)
       const removeOverlay = () => { map?.remove(e.obj as typeof overlays.value[0]) }
       (window as any).myOverlayTools = { removeOverlay: removeOverlay }
       const Editor = editorMap[e.obj.CLASS_NAME as keyof typeof editorMap]
       if (Editor) {
         const overlayEditorTool = new Editor(map, e.obj)
         e.obj.on('click', () => {
+          if (overlayEditorTool) { overlayEditorTool.close() }
           overlayEditor.value = !overlayEditor.value
           if (overlayEditor.value) {
             overlayEditorTool.open()
@@ -208,7 +244,22 @@ onMounted(() => {
           }
         })
         e.obj.on('rightclick', () => {
+          // console.log('em: ', em.target.getExtData().id)
+          overlays.value = overlays.value.filter((overlay) => {
+            // map?.remove(e.obj as typeof overlays.value[0])
+            return overlay.getExtData().id !== e.obj.getExtData().id
+            // console.log('overlay.getExtData().id: ', overlay.getExtData().id)
+            // console.log('em.target.getExtData().id: ', em.target.getExtData().id)
+            // console.log('overlay.getExtData().id === em.target.getExtData().id: ', overlay.getExtData().id === em.target.getExtData().id)
+          })
+          // console.log('targetOverlay: ', targetOverlay)
+          console.log('new overlays: ', overlays.value)
           map?.remove(e.obj as typeof overlays.value[0])
+          // overlays.value.filter((overlay) => {
+          //   console.log('overlay id: ', overlay.getExtData().id)
+          //   console.log('obj id: ', e.obj.getExtData().id)
+          // })
+          // console.log(overlays.value)
           // 待办：在marker上右键打不开菜单
           // console.log('right click', e.obj.getPosition())
           // if (e.obj.CLASS_NAME === 'AMap.Marker') {
@@ -267,11 +318,15 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div class="arrow">
+    <ArrowButtons @on-arrow-up="handleArrowUp" @on-arrow-down="handleArrowDown" @on-arrow-left="handleArrowLeft"
+      @on-arrow-right="handleArrowRight" />
+  </div>
   <div v-show="ifEdit" class="radio">
     <!-- <el-button class="marker" type="primary" @click="Ddraw">绘制点</el-button> -->
     <SwitchButtons @on-switch-changed="handleSwitchChange" @on-clear-click="handleClearClick" />
   </div>
-  <el-button type="primary" :icon="Plus" circle />
+  <!-- <el-button type="primary" :icon="Plus" circle /> -->
   <div id="container" />
 </template>
 
@@ -296,6 +351,12 @@ onUnmounted(() => {
   position: absolute;
   top: 50px;
   left: 170px;
+  z-index: 1;
+}
+
+.arrow {
+  top: 230px;
+  position: absolute;
   z-index: 1;
 }
 </style>

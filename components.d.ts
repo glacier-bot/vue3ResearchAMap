@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AMap: typeof import('./src/components/AMap.vue')['default']
+    ArrowButtons: typeof import('./src/components/buttons/ArrowButtons.vue')['default']
     AsideItem: typeof import('./src/components/AsideItem.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
