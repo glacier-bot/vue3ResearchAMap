@@ -70,8 +70,8 @@ const handleClick = () => {
   <el-row class="switch-text" :gutter="16">
     <el-col>
       <el-text size="small" type="info">
-        提示：请在结束绘制和编辑后删除覆盖物<br />
-        否则会出现编辑用的手柄无法删除的bug
+        提示：请在结束绘制后编辑覆盖物，否则<br />
+        会出现覆盖物无法编辑的bug
       </el-text>
     </el-col>
   </el-row>
@@ -87,9 +87,11 @@ const handleClick = () => {
 
 .switch-table1 {
   padding-top: 5px;
+  border-radius: 6px 6px 0 0;
 }
 
 .switch-text {
   padding-bottom: 5px;
+  border-radius: 0 0 6px 6px;
 }
 </style>

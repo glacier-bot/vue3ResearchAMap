@@ -20,6 +20,7 @@ declare global {
       setExtData: (ext: any) => void,
       getExtData: () => any,
       setMap: (map: any) => void,
+      getPath: () => any,
     }
   }
 }
@@ -32,11 +33,13 @@ const optLocation = ref<[number, number]>([0, 0])
 
 let map: AMap.Map | null = null
 let locationMarker: AMap.Marker | null = null
+
 // console.log('运行setup')
 
 const Ddraw = (e: string) => { (window as any).myMapTools.draw(e) }
 const DcloseMouseTool = () => { (window as any).myMapTools.closeMouseTool(false) }
 const removeOverlay = () => { (window as any).myMapTools.removeOverlay() }
+const closeEditorTool = () => { (window as any).myOverlayEditor.overlayEditorTool.close() }
 const closeMouseTool = () => { (window as any).myMapTools.closeMouseTool(true) }
 
 const handleSwitchChange = (e: { name: string, status: boolean }) => {
@@ -48,6 +51,7 @@ const handleClearClick = (e: boolean) => {
   if (e) {
     console.log('clear overlay')
     closeMouseTool()
+    closeEditorTool()
     removeOverlay()
   }
 }
@@ -192,12 +196,14 @@ onMounted(() => {
       viewMode: '2D',
       zoom: 12,
       center: [116.397428, 39.90923],
-      showIndoorMap:true,
+      showIndoorMap: true,
     })
     const toolBar = new AMap.ToolBar()
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
+
+    let textArea: AMap.Text
     locationMarker = new AMap.Marker({
       position: optLocation.value,
       icon: new AMap.Icon({
@@ -270,6 +276,28 @@ onMounted(() => {
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
     mouseTool.on('draw', (e: mouseToolEvent) => {
       // console.log('draw e: ', e)
+      const ringArea = (Locations: any) => {
+        const area = (AMap.GeometryUtil.ringArea(Locations)).toFixed(2)
+        return area >= 10000.00 ? (area / 10000).toFixed(2) + '公顷' : area + '平方米'
+      }
+      switch (e.obj.CLASS_NAME) {
+        case 'Overlay.Polygon':
+        case 'Overlay.Rectangle': {
+          const pathRing = e.obj.getPath()
+          const convertedLocations = pathRing.map((location: any) => {
+            return [location.lng, location.lat]
+          })
+          textArea = new AMap.Text({
+            position: convertedLocations[0],
+            text: '区域面积' + ringArea(convertedLocations),
+            offset: new AMap.Pixel(-20, -40)
+          })
+          textArea?.on('rightclick', (e: any) => { map?.remove(e.target) })
+          if (textArea) { map?.add(textArea) }
+
+        }
+      }
+
       e.obj.setExtData({ id: new Date().valueOf().toString() })
       overlays.value.push(e.obj)
       // console.log('overlays: ', overlays.value)
@@ -277,10 +305,19 @@ onMounted(() => {
       (window as any).myOverlayTools = { removeOverlay: removeOverlay }
       const Editor = editorMap[e.obj.CLASS_NAME as keyof typeof editorMap]
       if (Editor) {
-        const overlayEditorTool = new Editor(map, e.obj)
-        if (e.obj.CLASS_NAME === 'Overlay.Polygon') {
-          overlayEditorTool.addAdsorbPolygons(e.obj)
+        const overlayEditorTool = new Editor(map, e.obj);
+        (window as any).myOverlayEditor = { overlayEditorTool: overlayEditorTool }
+        switch (e.obj.CLASS_NAME) {
+          case 'Overlay.Polygon':
+          case 'Overlay.Rectangle': {
+            overlayEditorTool.on('adjust', (e: any) => {
+              const convert = e.target.getPath().map((location: any) => { return [location.lng, location.lat] })
+              textArea.setText('区域面积' + ringArea(convert))
+              textArea.setPosition(convert[0])
+            })
+          }
         }
+        if (e.obj.CLASS_NAME === 'Overlay.Polygon') { overlayEditorTool.addAdsorbPolygons(e.obj) }
         e.obj.on('click', () => {
           if (overlayEditorTool) { overlayEditorTool.close() }
           overlayEditor.value = !overlayEditor.value
