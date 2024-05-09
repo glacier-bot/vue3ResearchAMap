@@ -7,6 +7,8 @@ import SwitchButtons from './buttons/SwitchButtons.vue'
 import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 
 // 待办：1.在marker上右键没用，打不开菜单；2.删除显示面积的文本标签后，无法再次添加
+// 功能：1.自定义覆盖物的属性，2.在页面下方显示状态栏，动态更新定位点与覆盖物之间的关系
+// bug: 1.矩形、多边形、圆形的面积显示有问题
 
 declare global {
   interface Window {
@@ -240,7 +242,9 @@ onMounted(() => {
         case 'value3': {
           mouseTool.polygon({
             fillColor: '#00b0ff',
-            strokeColor: '#80d8ff'
+            strokeColor: '#80d8ff',
+            draggable: true,
+            cursor: 'default'
           });
           break;
         }
