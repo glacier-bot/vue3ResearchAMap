@@ -6,6 +6,8 @@ import '@amap/amap-jsapi-types'
 import SwitchButtons from './buttons/SwitchButtons.vue'
 import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 
+// 待办：1.在marker上右键没用，打不开菜单；2.删除显示面积的文本标签后，无法再次添加
+
 declare global {
   interface Window {
     _AMapSecurityConfig: any;
@@ -21,6 +23,8 @@ declare global {
       getExtData: () => any,
       setMap: (map: any) => void,
       getPath: () => any,
+      getCenter: () => any,
+      getRadius: () => number,
     }
   }
 }
@@ -280,6 +284,10 @@ onMounted(() => {
         const area = (AMap.GeometryUtil.ringArea(Locations)).toFixed(2)
         return area >= 10000.00 ? (area / 10000).toFixed(2) + '公顷' : area + '平方米'
       }
+      const circleArea = (radius: number) => {
+        const area = (Math.PI * Math.pow(radius, 2)).toFixed(2)
+        return parseFloat(area) >= 10000.00 ? (parseFloat(area) / 10000).toFixed(2) + '公顷' : area + '平方米'
+      }
       switch (e.obj.CLASS_NAME) {
         case 'Overlay.Polygon':
         case 'Overlay.Rectangle': {
@@ -294,7 +302,19 @@ onMounted(() => {
           })
           textArea?.on('rightclick', (e: any) => { map?.remove(e.target) })
           if (textArea) { map?.add(textArea) }
-
+          break
+        }
+        case 'Overlay.Circle': {
+          const center = e.obj.getCenter()
+          const radius = e.obj.getRadius()
+          textArea = new AMap.Text({
+            position: center,
+            text: '圆面积' + circleArea(radius),
+            offset: new AMap.Pixel(-20, -40)
+          })
+          textArea?.on('rightclick', (e: any) => { map?.remove(e.target) })
+          if (textArea) { map?.add(textArea) }
+          break
         }
       }
 
@@ -315,6 +335,16 @@ onMounted(() => {
               textArea.setText('区域面积' + ringArea(convert))
               textArea.setPosition(convert[0])
             })
+            break
+          }
+          case 'Overlay.Circle': {
+            overlayEditorTool.on('adjust', (e: any) => {
+              const center = e.target.getCenter()
+              const radius = e.target.getRadius()
+              textArea.setText('圆面积' + circleArea(radius))
+              textArea.setPosition(center)
+            })
+            break
           }
         }
         if (e.obj.CLASS_NAME === 'Overlay.Polygon') { overlayEditorTool.addAdsorbPolygons(e.obj) }
@@ -345,7 +375,6 @@ onMounted(() => {
           //   console.log('obj id: ', e.obj.getExtData().id)
           // })
           // console.log(overlays.value)
-          // **********************************************************待办：在marker上右键没用，打不开菜单***********************************
           // console.log('right click', e.obj.getPosition())
           // if (e.obj.CLASS_NAME === 'AMap.Marker') {
           //   aContextMenu.open(map, e.obj)
