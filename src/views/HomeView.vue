@@ -76,8 +76,10 @@ const handleNotification = (payload: string) => {
 }
 
 .notification {
-  // display: flex;
+  display: flex;
   // justify-content: center;
+  overflow: clip;
+  height: 75vh;
   flex-direction: column;
   position: absolute;
   z-index: 1000;

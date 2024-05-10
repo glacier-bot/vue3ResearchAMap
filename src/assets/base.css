@@ -89,6 +89,7 @@ body {
   display: flex;
   justify-content: start;
   margin-top: 8px;
+  margin-right: 6px;
   /* width: 300px; */
   background-color: rgba(0, 0, 0, 0.75);
   border-radius: 7px;
