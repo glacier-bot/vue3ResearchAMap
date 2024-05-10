@@ -84,3 +84,39 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.el-notification {
+  display: flex;
+  justify-content: start;
+  margin-top: 8px;
+  /* width: 300px; */
+  background-color: rgba(0, 0, 0, 0.75);
+  border-radius: 7px;
+  padding-top: 8px;
+  padding-left: 20px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+}
+.notification .el-notification .el-icon {
+  color: yellowgreen;
+  scale: 1.6;
+  top: 1px;
+  right: 8px;
+}
+.notification .el-notification .el-notification__group {
+  display: flex;
+  flex-direction: column;
+}
+.notification .el-notification .el-notification__group h2 {
+  color: aliceblue;
+  font-size: 20px;
+}
+.notification .el-notification .el-notification__group .el-notification__content {
+  color: blanchedalmond;
+  background-color: #483d8b;
+}
+.notification .el-notification .el-notification__group .el-icon {
+  scale: 1.2;
+  top: 3px;
+  left: 110px;
+}

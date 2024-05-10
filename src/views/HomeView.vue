@@ -22,10 +22,12 @@ const handleDrawSelected = (payload: string) => {
 const openNotification = (str: string) => {
   // bug：在app的底部出现
   ElNotification({
-    title: 'Title',
-    message: 'This is a notification message: ' + str,
-    type: 'success',
-    duration: 0
+    title: '到达提示',
+    message: '已到达 ' + str + ' 附近',
+    type: 'info',
+    duration: 4500,
+    appendTo: document.querySelector('.notification') as HTMLElement,
+    zIndex: 1000
   })
 }
 const handleNotification = (payload: string) => {
@@ -36,7 +38,7 @@ const handleNotification = (payload: string) => {
 </script>
 
 <template>
-  <el-container>
+  <el-container class="outter-main">
     <el-aside width="150px">
       <Aside @on-value-changed="handleValueChanged" @on-draw-selected="handleDrawSelected"
         @on-notification="handleNotification" />
@@ -44,6 +46,7 @@ const handleNotification = (payload: string) => {
     <el-container class="main">
       <el-main>
         <!-- <CollapseItem class="collapse" /> -->
+        <div class="notification" />
         <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" :draw-status="`${drawStatus}`" />
       </el-main>
     </el-container>
@@ -61,6 +64,7 @@ const handleNotification = (payload: string) => {
 }
 
 .el-main {
+  display: flex;
   padding: 0;
   margin: 0;
   background-color: aqua;
@@ -69,5 +73,22 @@ const handleNotification = (payload: string) => {
 .collapse {
   position: absolute;
   z-index: 1;
+}
+
+.notification {
+  // display: flex;
+  // justify-content: center;
+  flex-direction: column;
+  position: absolute;
+  z-index: 1000;
+  top: 0;
+  right: 0;
+  // width: 275px;
+  // background-color: rgba(0, 0, 0, 1);
+  margin-top: 7px;
+  margin-right: 10px;
+  // border-radius: 7px;
+  // padding: 8px 0px 8px 0px; //上右下左
+  // color: aliceblue;
 }
 </style>
