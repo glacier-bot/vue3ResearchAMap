@@ -5,6 +5,7 @@ import '@amap/amap-jsapi-types'
 // import { Plus } from '@element-plus/icons-vue'
 import SwitchButtons from './buttons/SwitchButtons.vue'
 import ArrowButtons from '../components/buttons/ArrowButtons.vue'
+import OverlayWithRemarks from './classes/OverlayWithRemarks'
 
 // 待办：1.在marker上右键没用，打不开菜单；2.删除显示面积的文本标签后，无法再次添加
 // 功能：1.自定义覆盖物的属性，2.在页面下方显示状态栏，动态更新定位点与覆盖物之间的关系
@@ -14,7 +15,7 @@ declare global {
   interface Window {
     _AMapSecurityConfig: any;
   }
-  interface mouseToolEvent {
+  interface mouseDrawEventCallbck {
     obj: {
       CLASS_NAME: string,
       _amap_id: number,
@@ -30,11 +31,12 @@ declare global {
     }
   }
 }
+
 const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String, newLat: String }
 const overlays = ref<any[]>([])
 const ifEdit = ref(false)
-const overlayEditor = ref(false)
 const optLocation = ref<[number, number]>([0, 0])
+const arrOverlayWithRemarks=ref<any[]>([])
 // const locationMarker = new window.AMap.Marker({})
 
 let map: AMap.Map | null = null
@@ -93,20 +95,20 @@ const distanceOverlays = () => {
     switch (overlay.className) {
       case 'AMap.Marker': {
         //计算两点之间的距离
-        const pointDistance = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.getPosition())
+        const pointDistance = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.obj.getPosition())
         console.log('pointDistance: ', pointDistance)
         break
       }
       case 'Overlay.Polyline': {
         //计算点到直线的距离
-        const lineDistance = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, overlay.getPath())
+        const lineDistance = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, overlay.obj.getPath())
         console.log('lineDistance: ', lineDistance)
         break
       }
       case 'Overlay.Circle': {
         //计算点到圆心的距离与圆半径的关系
-        const toCircleCenter = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.getCenter())
-        const pointCircle = toCircleCenter - overlay.getRadius() <= 0 ? true : false
+        const toCircleCenter = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.obj.getCenter())
+        const pointCircle = toCircleCenter - overlay.obj.getRadius() <= 0 ? true : false
         // console.log('toCircleCenter: ', toCircleCenter)
         // console.log('radius: ', overlay.getRadius())
         console.log('pointCircle: ', pointCircle)
@@ -114,7 +116,7 @@ const distanceOverlays = () => {
       }
       default: {
         //判断是否在区域内
-        const pointRing = AMap.GeometryUtil.isPointInRing(locationMarker?.getPosition() as any, overlay.getPath())
+        const pointRing = AMap.GeometryUtil.isPointInRing(locationMarker?.getPosition() as any, overlay.obj.getPath())
         console.log('pointRing: ', pointRing)
         break
       }
@@ -198,6 +200,9 @@ onMounted(() => {
     version: '2.0',
     plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool', 'AMap.PolyEditor', 'AMap.RectangleEditor', 'AMap.CircleEditor'],
   }).then((AMap) => {
+
+    
+
     map = new AMap.Map('container', {
       viewMode: '2D',
       zoom: 12,
@@ -218,13 +223,11 @@ onMounted(() => {
     })
     // const aContextMenu = new AMap.ContextMenu()
     // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
-    const editorMap = {
-      'Overlay.Polygon': AMap.PolyEditor,
-      'Overlay.Polyline': AMap.PolyEditor,
-      'Overlay.Rectangle': AMap.RectangleEditor,
-      'Overlay.Circle': AMap.CircleEditor
-    }
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
+    const changeLastOverlay=()=>{
+      const lastOverlay=overlays.value[overlays.value.length-1]
+      arrOverlayWithRemarks.value.push(new OverlayWithRemarks(map,lastOverlay))
+    }
     const draw = (e: string) => {
       switch (e) {
         case 'value1': {
@@ -268,7 +271,12 @@ onMounted(() => {
     // document.addEventListener('click', afterContextClick)
     const removeOverlay = () => {
       console.log('remove overlay')
-      map?.remove(overlays.value)
+      // map?.remove(overlays.value)
+      arrOverlayWithRemarks.value.forEach((overlay)=>{
+        overlay.editor.close()
+      })
+      arrOverlayWithRemarks.value=[]
+      map?.clearMap()
       overlays.value = []
     }
     (window as any).myMapTools = {
@@ -281,154 +289,10 @@ onMounted(() => {
     map?.addControl(maptype)
     // map?.addControl(geolocation)
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
-    mouseTool.on('draw', (e: mouseToolEvent) => {
-      // console.log('draw e: ', e)
-      const ringArea = (Locations: any) => {
-        const area = (AMap.GeometryUtil.ringArea(Locations)).toFixed(2)
-        return area >= 10000.00 ? (area / 10000).toFixed(2) + '公顷' : area + '平方米'
-      }
-      const circleArea = (radius: number) => {
-        const area = (Math.PI * Math.pow(radius, 2)).toFixed(2)
-        return parseFloat(area) >= 10000.00 ? (parseFloat(area) / 10000).toFixed(2) + '公顷' : area + '平方米'
-      }
-      
-      switch (e.obj.CLASS_NAME) {
-        case 'Overlay.Polygon':
-        case 'Overlay.Rectangle': {
-          const pathRing = e.obj.getPath()
-          const convertedLocations = pathRing.map((location: any) => {
-            return [location.lng, location.lat]
-          })
-          const textArea = new AMap.Text({
-            position: convertedLocations[0],
-            text: '区域面积' + ringArea(convertedLocations),
-            offset: new AMap.Pixel(-20, -40)
-          });
-          (window as any).mytextRing= { textArea: textArea }
-          textArea?.on('rightclick', (e: any) => { map?.remove(e.target) })
-          if (textArea) { map?.add(textArea) }
-          break
-        }
-        case 'Overlay.Circle': {
-          const center = e.obj.getCenter()
-          const radius = e.obj.getRadius()
-          const textArea = new AMap.Text({
-            position: center,
-            text: '圆面积' + circleArea(radius),
-            offset: new AMap.Pixel(-20, -40)
-          });
-          (window as any).mytextCircle= { textArea: textArea }
-          textArea?.on('rightclick', (e: any) => { map?.remove(e.target) })
-          if (textArea) { map?.add(textArea) }
-          break
-        }
-      }
-
-      e.obj.setExtData({ id: new Date().valueOf().toString() })
-      overlays.value.push(e.obj)
-      // console.log('overlays: ', overlays.value)
-      const removeOverlay = () => { map?.remove(e.obj as typeof overlays.value[0]) }
-      (window as any).myOverlayTools = { removeOverlay: removeOverlay }
-      const Editor = editorMap[e.obj.CLASS_NAME as keyof typeof editorMap]
-      if (Editor) {
-        const overlayEditorTool = new Editor(map, e.obj);
-        (window as any).myOverlayEditor = { overlayEditorTool: overlayEditorTool }
-        switch (e.obj.CLASS_NAME) {
-          case 'Overlay.Polygon':
-          case 'Overlay.Rectangle': {
-            overlayEditorTool.on('adjust', (e: any) => {
-              const convert = e.target.getPath().map((location: any) => { return [location.lng, location.lat] });
-              (window as any).mytextRing.textArea.setText('区域面积' + ringArea(convert));
-              (window as any).mytextRing.textArea.setPosition(convert[0]);
-            })
-            break
-          }
-          case 'Overlay.Circle': {
-            overlayEditorTool.on('adjust', (e: any) => {
-              const center = e.target.getCenter()
-              const radius = e.target.getRadius();
-              (window as any).mytextCircle.textArea.setText('圆面积' + circleArea(radius));
-              (window as any).mytextCircle.textArea.setPosition(center);
-            })
-            break
-          }
-        }
-        if (e.obj.CLASS_NAME === 'Overlay.Polygon') { overlayEditorTool.addAdsorbPolygons(e.obj) }
-        e.obj.on('click', () => {
-          if (overlayEditorTool) { overlayEditorTool.close() }
-          overlayEditor.value = !overlayEditor.value
-          if (overlayEditor.value) {
-            overlayEditorTool.open()
-          } else {
-            overlayEditorTool.close()
-          }
-        })
-        e.obj.on('rightclick', () => {
-          // console.log('em: ', em.target.getExtData().id)
-          overlays.value = overlays.value.filter((overlay) => {
-            // map?.remove(e.obj as typeof overlays.value[0])
-            overlayEditorTool.close()
-            return overlay.getExtData().id !== e.obj.getExtData().id
-            // console.log('overlay.getExtData().id: ', overlay.getExtData().id)
-            // console.log('em.target.getExtData().id: ', em.target.getExtData().id)
-            // console.log('overlay.getExtData().id === em.target.getExtData().id: ', overlay.getExtData().id === em.target.getExtData().id)
-          })
-          // console.log('targetOverlay: ', targetOverlay)
-          console.log('new overlays: ', overlays.value)
-          map?.remove(e.obj as typeof overlays.value[0])
-          // overlays.value.filter((overlay) => {
-          //   console.log('overlay id: ', overlay.getExtData().id)
-          //   console.log('obj id: ', e.obj.getExtData().id)
-          // })
-          // console.log(overlays.value)
-          // console.log('right click', e.obj.getPosition())
-          // if (e.obj.CLASS_NAME === 'AMap.Marker') {
-          //   aContextMenu.open(map, e.obj)
-          // } else {
-          //   aContextMenu.open(map, [e.obj.getBounds().northEast.lng, e.obj.getBounds().northEast.lat])
-          // }
-          // aContextMenu.open(map, [e.obj.getBounds().northEast.lng, e.obj.getBounds().northEast.lat])
-        })
-      }
-      // 被上面的if代替
-      // switch (e.obj.CLASS_NAME) {
-      //   case 'Overlay.Polygon' || 'Overlay.Polyline': {
-      //     const overlayEditorTool = new AMap.PolyEditor(map, e.obj)
-      //     e.obj.on('rightclick', () => {
-      //       overlayEditor.value = !overlayEditor.value
-      //       if (overlayEditor.value) {
-      //         overlayEditorTool.open()
-      //       } else {
-      //         overlayEditorTool.close()
-      //       }
-      //     })
-      //     break
-      //   }
-      //   case 'Overlay.Rectangle': {
-      //     const overlayEditorTool = new AMap.RectangleEditor(map, e.obj)
-      //     e.obj.on('rightclick', () => {
-      //       overlayEditor.value = !overlayEditor.value
-      //       if (overlayEditor.value) {
-      //         overlayEditorTool.open()
-      //       } else {
-      //         overlayEditorTool.close()
-      //       }
-      //     })
-      //     break
-      //   }
-      //   case 'Overlay.Circle': {
-      //     const overlayEditorTool = new AMap.CircleEditor(map, e.obj)
-      //     e.obj.on('rightclick', () => {
-      //       overlayEditor.value = !overlayEditor.value
-      //       if (overlayEditor.value) {
-      //         overlayEditorTool.open()
-      //       } else {
-      //         overlayEditorTool.close()
-      //       }
-      //     })
-      //     break
-      //   }
-      // }
+    mouseTool.on('draw', (e: mouseDrawEventCallbck) => {
+      overlays.value.push(e)
+      // console.log(overlays.value.length)
+      changeLastOverlay()
     })
   })
 })

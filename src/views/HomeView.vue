@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import AMap from '../components/AMap.vue'
+// import AMap from '../components/AMap.vue'
+import AMap from '../components/AMapReConstruct.vue'
 import Aside from '../components/AsideItem.vue'
 
 const latitute = ref(0)
