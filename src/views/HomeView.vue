@@ -9,6 +9,7 @@ import { ElNotification } from 'element-plus'
 const latitute = ref(0)
 const longtitute = ref(0)
 const drawStatus = ref('')
+const testNum = ref(0)
 
 const handleValueChanged = (payload: { latitute: number, longtitute: number }) => {
   // console.log('payload:', payload)
@@ -20,10 +21,10 @@ const handleDrawSelected = (payload: string) => {
   drawStatus.value = payload
 }
 const openNotification = (str: string) => {
-  // bug：在app的底部出现
+  testNum.value += 1
   ElNotification({
     title: '到达提示',
-    message: '已到达 ' + str + ' 附近',
+    message: '已到达 ' + str + ': ' + testNum.value + ' 附近',
     type: 'info',
     duration: 4500,
     appendTo: document.querySelector('.notification') as HTMLElement,
