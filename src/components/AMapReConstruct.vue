@@ -36,7 +36,7 @@ const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String
 const overlays = ref<any[]>([])
 const ifEdit = ref(false)
 const optLocation = ref<[number, number]>([0, 0])
-const arrOverlayWithRemarks=ref<any[]>([])
+const arrOverlayWithRemarks = ref<any[]>([])
 // const locationMarker = new window.AMap.Marker({})
 
 let map: AMap.Map | null = null
@@ -200,9 +200,6 @@ onMounted(() => {
     version: '2.0',
     plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool', 'AMap.PolyEditor', 'AMap.RectangleEditor', 'AMap.CircleEditor'],
   }).then((AMap) => {
-
-    
-
     map = new AMap.Map('container', {
       viewMode: '2D',
       zoom: 12,
@@ -224,9 +221,9 @@ onMounted(() => {
     // const aContextMenu = new AMap.ContextMenu()
     // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
-    const changeLastOverlay=()=>{
-      const lastOverlay=overlays.value[overlays.value.length-1]
-      arrOverlayWithRemarks.value.push(new OverlayWithRemarks(map,lastOverlay))
+    const changeLastOverlay = () => {
+      const lastOverlay = overlays.value[overlays.value.length - 1]
+      arrOverlayWithRemarks.value.push(new OverlayWithRemarks(map, lastOverlay))
     }
     const draw = (e: string) => {
       switch (e) {
@@ -272,10 +269,10 @@ onMounted(() => {
     const removeOverlay = () => {
       console.log('remove overlay')
       // map?.remove(overlays.value)
-      arrOverlayWithRemarks.value.forEach((overlay)=>{
+      arrOverlayWithRemarks.value.forEach((overlay) => {
         overlay.editor.close()
       })
-      arrOverlayWithRemarks.value=[]
+      arrOverlayWithRemarks.value = []
       map?.clearMap()
       overlays.value = []
     }

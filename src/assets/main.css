@@ -24,11 +24,11 @@ a,
 @media (min-width: 4096px) {
   body {
     display: flex;
-    /* place-items: center; */
+    place-items: center;
   }
 
   #app {
-    /* display: grid; */
+    display: grid;
     grid-template-columns: 1fr 1fr;
     padding: 0;
   }

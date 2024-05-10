@@ -1,4 +1,3 @@
-<!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { Location, Setting, Edit } from '@element-plus/icons-vue'
@@ -7,8 +6,9 @@ const latitute = ref(0)
 const longtitute = ref(0)
 
 const emit = defineEmits({
-  'onValueChanged': (payload: { latitute: number, longtitute: number }) => true,
-  'onDrawSelected': (payload: string) => true
+  'onValueChanged': (payload: { latitute: number, longtitute: number }) => payload,
+  'onDrawSelected': (payload: string) => payload,
+  'onNotification': (payload: string) => payload
 })
 
 watch([latitute, longtitute], (newVal, oldVal) => {
@@ -30,7 +30,9 @@ const handleSelect = (key: string) => {
       break
     case '9':
       // console.log('Setting')
+      // alert('Setting')
       emit('onDrawSelected', 'settings')
+      emit('onNotification', 'Setting')
       break
   }
 }
