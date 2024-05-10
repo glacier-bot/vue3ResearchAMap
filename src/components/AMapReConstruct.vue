@@ -33,10 +33,10 @@ declare global {
 }
 
 const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String, newLat: String }
-const overlays = ref<any[]>([])
+let overlays: any[] = []
 const ifEdit = ref(false)
 const optLocation = ref<[number, number]>([0, 0])
-const arrOverlayWithRemarks = ref<any[]>([])
+let arrOverlayWithRemarks: any[] = []
 // const locationMarker = new window.AMap.Marker({})
 
 let map: AMap.Map | null = null
@@ -47,7 +47,6 @@ let locationMarker: AMap.Marker | null = null
 const Ddraw = (e: string) => { (window as any).myMapTools.draw(e) }
 const DcloseMouseTool = () => { (window as any).myMapTools.closeMouseTool(false) }
 const removeOverlay = () => { (window as any).myMapTools.removeOverlay() }
-const closeEditorTool = () => { (window as any).myOverlayEditor.overlayEditorTool.close() }
 const closeMouseTool = () => { (window as any).myMapTools.closeMouseTool(true) }
 
 const handleSwitchChange = (e: { name: string, status: boolean }) => {
@@ -59,7 +58,6 @@ const handleClearClick = (e: boolean) => {
   if (e) {
     console.log('clear overlay')
     closeMouseTool()
-    closeEditorTool()
     removeOverlay()
   }
 }
@@ -89,8 +87,8 @@ const handleArrowRight = () => {
 }
 const distanceOverlays = () => {
   // console.log('distance overlays: ', overlays.value)
-  if (!overlays.value) return
-  overlays.value.forEach((overlay) => {
+  if (!overlays) return
+  overlays.forEach((overlay) => {
     // console.log('overlay class name: ', overlay.className)
     switch (overlay.className) {
       case 'AMap.Marker': {
@@ -222,8 +220,8 @@ onMounted(() => {
     // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
     const changeLastOverlay = () => {
-      const lastOverlay = overlays.value[overlays.value.length - 1]
-      arrOverlayWithRemarks.value.push(new OverlayWithRemarks(map, lastOverlay))
+      const lastOverlay = overlays[overlays.length - 1]
+      arrOverlayWithRemarks.push(new OverlayWithRemarks(map, lastOverlay))
     }
     const draw = (e: string) => {
       switch (e) {
@@ -269,12 +267,12 @@ onMounted(() => {
     const removeOverlay = () => {
       console.log('remove overlay')
       // map?.remove(overlays.value)
-      arrOverlayWithRemarks.value.forEach((overlay) => {
+      arrOverlayWithRemarks.forEach((overlay) => {
         overlay.editor.close()
       })
-      arrOverlayWithRemarks.value = []
+      arrOverlayWithRemarks = []
       map?.clearMap()
-      overlays.value = []
+      overlays = []
     }
     (window as any).myMapTools = {
       draw: draw,
@@ -287,7 +285,7 @@ onMounted(() => {
     // map?.addControl(geolocation)
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
     mouseTool.on('draw', (e: mouseDrawEventCallbck) => {
-      overlays.value.push(e)
+      overlays.push(e)
       // console.log(overlays.value.length)
       changeLastOverlay()
     })
