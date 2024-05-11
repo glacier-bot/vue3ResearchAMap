@@ -56,7 +56,7 @@ const handleSwitchChange = (e: { name: string, status: boolean }) => {
 }
 const handleClearClick = (e: boolean) => {
   if (e) {
-    console.log('clear overlay')
+    // console.log('clear overlay')
     closeMouseTool()
     removeOverlay()
   }
@@ -221,7 +221,8 @@ onMounted(() => {
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
     const changeLastOverlay = () => {
       const lastOverlay = overlays[overlays.length - 1]
-      arrOverlayWithRemarks.push(new OverlayWithRemarks(map, lastOverlay))
+      const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay)
+      arrOverlayWithRemarks.push(overlayWithRemarks)
     }
     const draw = (e: string) => {
       switch (e) {
@@ -265,10 +266,12 @@ onMounted(() => {
     // const afterContextClick = () => { aContextMenu.close() }
     // document.addEventListener('click', afterContextClick)
     const removeOverlay = () => {
-      console.log('remove overlay')
+      // console.log('remove overlay')
       // map?.remove(overlays.value)
       arrOverlayWithRemarks.forEach((overlay) => {
         overlay.editor.close()
+        overlay.destructor()
+        overlay = null
       })
       arrOverlayWithRemarks = []
       map?.clearMap()

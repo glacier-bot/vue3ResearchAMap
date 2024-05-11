@@ -22,6 +22,8 @@ class OverlayWithRemarks {
   // 编辑器属性
   editor: any
   #handleOverlayEditor = false
+  // 右键菜单
+  #contextMenu: any
 
   constructor(map: any, overlay: any) {
     this.#map = map
@@ -31,6 +33,7 @@ class OverlayWithRemarks {
       draggable: false
     })
     this.#overlayType = overlay.obj.CLASS_NAME
+    this.#contextMenu = new AMap.ContextMenu()
     this.#runMain()
   }
 
@@ -138,14 +141,64 @@ class OverlayWithRemarks {
       }
     })
     // 绑定右键事件：1.控制标签显示; 2.打开右键菜单
-    this.#overlay.obj.on('rightclick', () => {
-      if (!this.#remarkShow) {
-        this.#remarks.show()
-        this.#remarkShow = true
-      } else {
+    this.#overlay.obj.on('rightclick', (e: any) => {
+      // if (!this.#remarkShow) {
+      //   this.#remarks.show()
+      //   this.#remarkShow = true
+      // } else {
+      //   this.#remarks.hide()
+      //   this.#remarkShow = false
+      // }
+      // console.log('this.#overlay.obj: ', this.#overlay.obj.getPosition)
+      this.#contextMenu.open(this.#map, e.lnglat)
+    })
+  }
+
+  #setContextMenu() {
+    // 绑定右键菜单事件
+    // 1.右键删除
+    // 2.右键设置属性
+    // 3.右键打开或关闭标签
+    this.#contextMenu.addItem(
+      '设置属性...',
+      () => {
+        console.log('弹出设置属性对话框')
+      },
+      0
+    )
+    this.#contextMenu.addItem(
+      '隐藏标签',
+      () => {
         this.#remarks.hide()
         this.#remarkShow = false
+        this.#contextMenu.close()
+      },
+      1
+    )
+    this.#contextMenu.addItem(
+      '显示标签',
+      () => {
+        this.#remarks.show()
+        this.#remarkShow = true
+        this.#contextMenu.close()
+      },
+      2
+    )
+    this.#contextMenu.addItem('删除覆盖物', () => {
+      this.destructor()
+      this.#contextMenu.close()
+    })
+    this.#contextMenu.on('open', () => {
+      console.log('open context menu')
+      //不能正常删除标签
+      if (this.#remarkShow) {
+        // console.log('remove 显示标签')
+      } else {
+        this.#contextMenu.removeItem('隐藏标签')
       }
+    })
+    this.#contextMenu.on('close', () => {
+      console.log('close context menu')
     })
   }
 
@@ -157,6 +210,14 @@ class OverlayWithRemarks {
     }
     this.#setEditor()
     this.#setEvents()
+    this.#setContextMenu()
+  }
+
+  destructor() {
+    // console.log('调用析构函数')
+    this.editor.close()
+    this.#remarks.remove()
+    this.#map.remove(this.#overlay.obj)
   }
 }
 
