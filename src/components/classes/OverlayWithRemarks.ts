@@ -13,6 +13,8 @@ class OverlayWithRemarks {
   #overlayType: string
   #remarks: any
   #remarkShow = true
+  #hideRemark = false
+  #showRemark = false
   // 如果是矩形和多边形
   #path: any
   #convertedLocations: any
@@ -37,7 +39,7 @@ class OverlayWithRemarks {
     this.#runMain()
   }
 
-  #ringArea(locations: any) {
+  #ringArea = (locations: any) => {
     const area = AMap.GeometryUtil.ringArea(locations).toFixed(2)
     return parseFloat(area) > 0
       ? parseFloat(area) >= 10000.0
@@ -46,7 +48,7 @@ class OverlayWithRemarks {
       : null
   }
 
-  #circleArea(radius: number) {
+  #circleArea = (radius: number) => {
     const area = (Math.PI * Math.pow(radius, 2)).toFixed(2)
     return parseFloat(area) > 0
       ? parseFloat(area) >= 10000.0
@@ -55,7 +57,7 @@ class OverlayWithRemarks {
       : null
   }
 
-  #setRemarks() {
+  #setRemarks = () => {
     switch (this.#overlayType) {
       case 'Overlay.Polygon':
       case 'Overlay.Rectangle': {
@@ -87,7 +89,7 @@ class OverlayWithRemarks {
     }
   }
 
-  #setEditor() {
+  #setEditor = () => {
     switch (this.#overlayType) {
       case 'Overlay.Polygon': {
         this.editor = new AMap.PolyEditor(this.#map, this.#overlay.obj)
@@ -127,7 +129,7 @@ class OverlayWithRemarks {
     }
   }
 
-  #setEvents() {
+  #setEvents = () => {
     // 绑定左键事件：编辑器的打开和关闭
     this.#overlay.obj.on('click', () => {
       if (this.editor) {
@@ -154,7 +156,17 @@ class OverlayWithRemarks {
     })
   }
 
-  #setContextMenu() {
+  #hideRemarks = () => {
+    this.#remarks.hide()
+    this.#contextMenu.close()
+  }
+
+  #showRemarks = () => {
+    this.#remarks.show()
+    this.#contextMenu.close()
+  }
+
+  #setContextMenu = () => {
     // 绑定右键菜单事件
     // 1.右键删除
     // 2.右键设置属性
@@ -166,43 +178,37 @@ class OverlayWithRemarks {
       },
       0
     )
-    this.#contextMenu.addItem(
-      '隐藏标签',
-      () => {
-        this.#remarks.hide()
-        this.#remarkShow = false
-        this.#contextMenu.close()
-      },
-      1
-    )
-    this.#contextMenu.addItem(
-      '显示标签',
-      () => {
-        this.#remarks.show()
-        this.#remarkShow = true
-        this.#contextMenu.close()
-      },
-      2
-    )
+    // this.#contextMenu.addItem('隐藏标签', this.#hideRemarks, 1)
+    // this.#contextMenu.addItem('显示标签', this.#showRemarks, 2)
     this.#contextMenu.addItem('删除覆盖物', () => {
       this.destructor()
       this.#contextMenu.close()
     })
     this.#contextMenu.on('open', () => {
-      console.log('open context menu')
-      //不能正常删除标签
+      // console.log('open context menu')
+      console.log('show: ', this.#remarkShow)
       if (this.#remarkShow) {
-        // console.log('remove 显示标签')
+        if (!this.#hideRemark) {
+          this.#contextMenu.addItem('隐藏标签', this.#hideRemarks, 1)
+        }
+        this.#contextMenu.removeItem('显示标签', this.#showRemarks)
+        this.#remarkShow = false
       } else {
-        this.#contextMenu.removeItem('隐藏标签')
+        if (this.#showRemark) {
+          this.#contextMenu.addItem('显示标签', this.#showRemarks, 2)
+        }
+        this.#contextMenu.removeItem('隐藏标签', this.#hideRemarks)
+        this.#remarkShow = true
       }
+      this.#hideRemark = !this.#hideRemark
+      this.#showRemark = !this.#showRemark
     })
     this.#contextMenu.on('close', () => {
-      console.log('close context menu')
+      // console.log('close context menu')
     })
   }
 
-  #runMain() {
+  #runMain = () => {
     this.#setRemarks()
     // this.#remarks.on('rightclick',()=>{this.#remarks.hide()})
     if (this.#remarks) {
@@ -213,7 +219,7 @@ class OverlayWithRemarks {
     this.#setContextMenu()
   }
 
-  destructor() {
+  destructor = () => {
     // console.log('调用析构函数')
     this.editor.close()
     this.#remarks.remove()
