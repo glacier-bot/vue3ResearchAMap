@@ -7,7 +7,7 @@ import SwitchButtons from './buttons/SwitchButtons.vue'
 import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 
 // 待办：1.在marker上右键没用，打不开菜单；2.删除显示面积的文本标签后，无法再次添加
-// 功能：1.自定义覆盖物的属性，2.在页面下方显示状态栏，动态更新定位点与覆盖物之间的关系
+// 功能：1.自定义覆盖物的属性；2.在页面下方显示状态栏，动态更新定位点与覆盖物之间的关系；3支持上传无坐标透明背景图片覆盖物，拖动调整位置
 // bug: 1.矩形、多边形、圆形的面积显示有问题
 
 declare global {
@@ -291,7 +291,7 @@ onMounted(() => {
         const area = (Math.PI * Math.pow(radius, 2)).toFixed(2)
         return parseFloat(area) >= 10000.00 ? (parseFloat(area) / 10000).toFixed(2) + '公顷' : area + '平方米'
       }
-      
+
       switch (e.obj.CLASS_NAME) {
         case 'Overlay.Polygon':
         case 'Overlay.Rectangle': {
@@ -304,7 +304,7 @@ onMounted(() => {
             text: '区域面积' + ringArea(convertedLocations),
             offset: new AMap.Pixel(-20, -40)
           });
-          (window as any).mytextRing= { textArea: textArea }
+          (window as any).mytextRing = { textArea: textArea }
           textArea?.on('rightclick', (e: any) => { map?.remove(e.target) })
           if (textArea) { map?.add(textArea) }
           break
@@ -317,7 +317,7 @@ onMounted(() => {
             text: '圆面积' + circleArea(radius),
             offset: new AMap.Pixel(-20, -40)
           });
-          (window as any).mytextCircle= { textArea: textArea }
+          (window as any).mytextCircle = { textArea: textArea }
           textArea?.on('rightclick', (e: any) => { map?.remove(e.target) })
           if (textArea) { map?.add(textArea) }
           break
