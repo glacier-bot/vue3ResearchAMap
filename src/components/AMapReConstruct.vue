@@ -70,25 +70,41 @@ const handleClearClick = (e: boolean) => {
 }
 const handleArrowUp = () => {
   console.log('up')
-  optLocation.value = [optLocation.value[0], optLocation.value[1] + 0.01]
+  // optLocation.value = [optLocation.value[0], optLocation.value[1] + 0.0001]
+  if(!locationMarker) return
+  const lnglat = locationMarker.getPosition()
+  if(!lnglat) return
+  optLocation.value=[lnglat.lng,lnglat.lat+0.0001]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
 const handleArrowDown = () => {
   console.log('down')
-  optLocation.value = [optLocation.value[0], optLocation.value[1] - 0.01]
+  // optLocation.value = [optLocation.value[0], optLocation.value[1] - 0.0001]
+  if(!locationMarker) return
+  const lnglat = locationMarker.getPosition()
+  if(!lnglat) return
+  optLocation.value=[lnglat.lng,lnglat.lat-0.0001]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
 const handleArrowLeft = () => {
   console.log('left')
-  optLocation.value = [optLocation.value[0] - 0.01, optLocation.value[1]]
+  // optLocation.value = [optLocation.value[0] - 0.0001, optLocation.value[1]]
+  if(!locationMarker) return
+  const lnglat = locationMarker.getPosition()
+  if(!lnglat) return
+  optLocation.value=[lnglat.lng-0.0001,lnglat.lat]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
 const handleArrowRight = () => {
   console.log('right')
-  optLocation.value = [optLocation.value[0] + 0.01, optLocation.value[1]]
+  // optLocation.value = [optLocation.value[0] + 0.0001, optLocation.value[1]]
+  if(!locationMarker) return
+  const lnglat = locationMarker.getPosition()
+  if(!lnglat) return
+  optLocation.value=[lnglat.lng+0.0001,lnglat.lat]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
@@ -159,6 +175,7 @@ watch(
           // const deltaLng = 0//121.269525 - 121.104609 新值减旧值
           optLocation.value = [result.locations[0].lng + deltaLng.value, result.locations[0].lat + deltaLat.value]
           map?.panTo(optLocation.value)
+          map?.setZoom(16)
           locationMarker?.setPosition(optLocation.value)
           if (!locationMarker) { return }
           map?.add(
@@ -197,6 +214,8 @@ watch(
 // }
 onMounted(() => {
   // console.log('运行加载')
+  deltaLat.value = 0
+  deltaLng.value = 0
   window._AMapSecurityConfig = {
     securityJsCode: "db0fece5e68ddfcb041edbc7c6a454f5",
   };

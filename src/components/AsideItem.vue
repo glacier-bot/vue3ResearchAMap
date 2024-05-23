@@ -38,7 +38,7 @@ const handleSelect = (key: string) => {
         intervalId=setInterval(() => {
           console.log('Updating location...')
           getGeoLocation()
-        }, 5000)
+        }, 1000)
       }else{
         console.log('Stop updating location')
         clearInterval(intervalId)
