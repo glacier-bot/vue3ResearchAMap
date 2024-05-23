@@ -37,6 +37,13 @@ let overlays: any[] = []
 const ifEdit = ref(false)
 const optLocation = ref<[number, number]>([0, 0])
 let arrOverlayWithRemarks: any[] = []
+const ifFirstLocation = ref(true)
+const startLng=ref(0)
+const startLat=ref(0)
+const endLng=ref(0)
+const endLat=ref(0)
+const deltaLat=ref(0)
+const deltaLng=ref(0)
 // const locationMarker = new window.AMap.Marker({})
 
 let map: AMap.Map | null = null
@@ -148,9 +155,9 @@ watch(
     AMap.convertFrom(newLocation, 'gps', (status: string, result: { info: string, locations: Array<{ lng: number, lat: number }> }) => {
       if (status === 'complete') {
         if (result.info === 'ok') {
-          const deltaLat = 31.343713 - 31.138115
-          const deltaLng = 121.269525 - 121.104609
-          optLocation.value = [result.locations[0].lng + deltaLng, result.locations[0].lat + deltaLat]
+          // const deltaLat = 0//31.343713 - 31.138115  新值减旧值
+          // const deltaLng = 0//121.269525 - 121.104609 新值减旧值
+          optLocation.value = [result.locations[0].lng + deltaLng.value, result.locations[0].lat + deltaLat.value]
           map?.panTo(optLocation.value)
           locationMarker?.setPosition(optLocation.value)
           if (!locationMarker) { return }
@@ -214,7 +221,28 @@ onMounted(() => {
       icon: new AMap.Icon({
         image: '../public/map-158493_1280.png',
         imageSize: new AMap.Size(18, 28),
-      })
+      }),
+      draggable: true
+    })
+    locationMarker?.on('dragstart',(e:any)=>{
+      if(ifFirstLocation.value){
+        // console.log('dragstart e: ',e.lnglat.lat)
+        startLng.value = e.lnglat.lng
+        startLat.value = e.lnglat.lat
+        ifFirstLocation.value = false
+      }
+    })
+    locationMarker?.on('dragend',(e:any)=>{
+      // console.log('dragend e: ',e)
+      endLng.value = e.lnglat.lng
+      endLat.value = e.lnglat.lat
+      deltaLng.value = endLng.value - startLng.value
+      deltaLat.value = endLat.value - startLat.value
+      console.log('deltaLng: ',deltaLng.value)
+      console.log('deltaLat: ',deltaLat.value)
+    })
+    locationMarker?.on('rightclick',()=>{
+      locationMarker?.setDraggable(false)
     })
     // const aContextMenu = new AMap.ContextMenu()
     // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)

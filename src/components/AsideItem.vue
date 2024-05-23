@@ -4,6 +4,8 @@ import { Location, Setting, Edit } from '@element-plus/icons-vue'
 
 const latitute = ref(0)
 const longtitute = ref(0)
+const flag = ref(false)
+let intervalId: number
 
 const emit = defineEmits({
   'onValueChanged': (payload: { latitute: number, longtitute: number }) => payload,
@@ -27,6 +29,20 @@ const handleSelect = (key: string) => {
       break
     case '2':
       emit('onDrawSelected', 'selected')
+      break
+    case '3':
+      flag.value=!flag.value
+      if (flag.value) {
+        console.log('Start updating location')
+        getGeoLocation()
+        intervalId=setInterval(() => {
+          console.log('Updating location...')
+          getGeoLocation()
+        }, 5000)
+      }else{
+        console.log('Stop updating location')
+        clearInterval(intervalId)
+      }
       break
     case '9':
       // console.log('Setting')
@@ -57,7 +73,13 @@ const getGeoLocation = () => {
       <el-icon>
         <Location />
       </el-icon>
-      定位
+      校准定位
+    </el-menu-item>
+    <el-menu-item index="3">
+      <el-icon>
+        <Location />
+      </el-icon>
+      持续更新定位
     </el-menu-item>
     <el-menu-item index="2">
       <el-icon>
