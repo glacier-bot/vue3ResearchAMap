@@ -243,11 +243,11 @@ onMounted(() => {
       }),
       draggable: true
     })
-    locationMarker?.on('dragstart',(e:any)=>{
+    locationMarker?.on('dragstart',()=>{
       if(ifFirstLocation.value){
         // console.log('dragstart e: ',e.lnglat.lat)
-        startLng.value = e.lnglat.lng
-        startLat.value = e.lnglat.lat
+        startLng.value = props.newLng//e.lnglat.lng
+        startLat.value = props.newLat//e.lnglat.lat
         ifFirstLocation.value = false
       }
     })
