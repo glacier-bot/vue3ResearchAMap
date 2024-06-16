@@ -15,7 +15,7 @@ const emit = defineEmits({
 
 watch([latitute, longtitute], (newVal, oldVal) => {
   console.log('latitute:', newVal[0], oldVal[0])
-  console.log('longtitute:', newVal[1], oldVal[0])
+  console.log('longtitute:', newVal[1], oldVal[1])
   emit('onValueChanged', { latitute: newVal[0], longtitute: newVal[1] })
 })
 
@@ -58,6 +58,7 @@ const handleSelect = (key: string) => {
 const getGeoLocation = () => {
   if (navigator.geolocation) {
     const watchID = navigator.geolocation.watchPosition((position) => {
+      console.log('watching location...')
       // console.log('Latitude:', position.coords.latitude)
       latitute.value = parseFloat(position.coords.latitude.toFixed(2))
       // console.log('Longitude:', position.coords.longitude)
