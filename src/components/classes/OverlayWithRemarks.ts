@@ -8,11 +8,15 @@ declare global {
 
 class OverlayWithRemarks {
   // 初始化属性
+  id: string
+  #name = 'id: ' + new Date().valueOf().toString()
+  #beizhu = '初始化备注'
   #map: any
   #overlay: any
+  #polygonAttrDialog: any
   #overlayType: string
   #remarks: any
-  #remarkShow = true
+  #remarkShow = true // 待办：用this.#remarks.getVisible()代替
   #hideRemark = false
   #showRemark = false
   // 如果是矩形和多边形
@@ -26,10 +30,14 @@ class OverlayWithRemarks {
   #handleOverlayEditor = false
   // 右键菜单
   #contextMenu: any
+  #setPolygonAttrName
 
-  constructor(map: any, overlay: any) {
+  constructor(map: any, overlay: any, polygonAttrDialog: any, setPolygonAttrName: any) {
     this.#map = map
     this.#overlay = overlay
+    this.id = new Date().valueOf().toString()
+    this.#polygonAttrDialog = polygonAttrDialog
+    this.#setPolygonAttrName = setPolygonAttrName
     this.#remarks = new AMap.Text({
       offset: new AMap.Pixel(-20, -20),
       draggable: false
@@ -175,6 +183,16 @@ class OverlayWithRemarks {
       '设置属性...',
       () => {
         console.log('弹出设置属性对话框')
+        //传递当前覆盖物的属性
+        this.#setPolygonAttrName({
+          id: this.id,
+          name: this.#name,
+          remarks: this.#beizhu,
+          ifFillColor: this.#overlay.obj.getOptions().fillOpacity > 0 ? true : false,
+          fillColor: this.#overlay.obj.getOptions().fillColor
+        })
+        this.#polygonAttrDialog()
+        this.#contextMenu.close()
       },
       0
     )
@@ -205,6 +223,16 @@ class OverlayWithRemarks {
     })
     this.#contextMenu.on('close', () => {
       // console.log('close context menu')
+    })
+  }
+
+  sendAttrs = (attrs: any) => {
+    if (attrs.id !== this.id) return
+    this.#name = attrs.name
+    this.#beizhu = attrs.remarks
+    this.#overlay.obj.setOptions({
+      fillOpacity: attrs.ifFillColor ? 0.5 : 0,
+      fillColor: attrs.fillColor
     })
   }
 

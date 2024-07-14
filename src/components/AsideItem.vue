@@ -57,13 +57,23 @@ const handleSelect = (key: string) => {
 //getCurrentPosition改为watchPosition
 const getGeoLocation = () => {
   if (navigator.geolocation) {
-    const watchID = navigator.geolocation.watchPosition((position) => {
-      console.log('watching location...')
-      // console.log('Latitude:', position.coords.latitude)
-      latitute.value = parseFloat(position.coords.latitude.toFixed(2))
-      // console.log('Longitude:', position.coords.longitude)
-      longtitute.value = parseFloat(position.coords.longitude.toFixed(2))
-    });
+    const watchID = navigator.geolocation.watchPosition(
+      (position) => {
+        console.log('watching location...')
+        // console.log('Latitude:', position.coords.latitude)
+        latitute.value = parseFloat(position.coords.latitude.toFixed(2))
+        // console.log('Longitude:', position.coords.longitude)
+        longtitute.value = parseFloat(position.coords.longitude.toFixed(2))
+      },
+      (error) => {
+        console.log('error watching location:', error)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
     (window as any).myParams = {watchID: watchID}
   } else {
     console.log('Geolocation is not supported by this browser.')

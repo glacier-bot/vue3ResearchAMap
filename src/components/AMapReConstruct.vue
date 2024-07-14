@@ -6,6 +6,7 @@ import '@amap/amap-jsapi-types'
 import SwitchButtons from './buttons/SwitchButtons.vue'
 import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 import OverlayWithRemarks from './classes/OverlayWithRemarks'
+import PropertyBoxPolygon from './dialogs/PropertyBoxPolygon.vue'
 
 // 待办：1.在marker上右键没用，打不开菜单；2.删除显示面积的文本标签后，无法再次添加
 // 功能：1.自定义覆盖物的属性，2.在页面下方显示状态栏，动态更新定位点与覆盖物之间的关系
@@ -38,16 +39,45 @@ const ifEdit = ref(false)
 const optLocation = ref<[number, number]>([0, 0])
 let arrOverlayWithRemarks: any[] = []
 const ifFirstLocation = ref(true)
-const startLng=ref(0)
-const startLat=ref(0)
-const endLng=ref(0)
-const endLat=ref(0)
-const deltaLat=ref(0)
-const deltaLng=ref(0)
+const startLng = ref(0)
+const startLat = ref(0)
+const endLng = ref(0)
+const endLat = ref(0)
+const deltaLat = ref(0)
+const deltaLng = ref(0)
 // const locationMarker = new window.AMap.Marker({})
 
 let map: AMap.Map | null = null
-let locationMarker: AMap.Marker | null = null
+let locationMarker: AMap.Marker | null = null;
+
+const polygonAttrDialog = ref(false)
+const handlePolygonAttrDialog = () => {
+  polygonAttrDialog.value = true
+  console.log('调用handlePolygonAttrDialog', polygonAttrDialog.value)
+}
+const polygonAttrs = ref({
+  id: '114514',
+  name: 'testName',
+  remarks: 'testRemarks',
+  ifFillColor: true,
+  fillColor: '#00B2D5',
+})
+const setPolygonAttrName = (e: any) => {
+  polygonAttrs.value.id = e.id
+  polygonAttrs.value.name = e.name
+  polygonAttrs.value.remarks = e.remarks
+  polygonAttrs.value.ifFillColor = e.ifFillColor
+  polygonAttrs.value.fillColor = e.fillColor
+}
+const handlePolygonAttrs = (e: any) => {
+  polygonAttrs.value.name = e.name
+  polygonAttrs.value.remarks = e.remarks
+  polygonAttrs.value.ifFillColor = e.ifFillColor
+  polygonAttrs.value.fillColor = e.fillColor
+  arrOverlayWithRemarks.forEach((overlay) => {
+    overlay.sendAttrs(polygonAttrs.value)
+  })
+}
 
 // console.log('运行setup')
 
@@ -71,40 +101,40 @@ const handleClearClick = (e: boolean) => {
 const handleArrowUp = () => {
   console.log('up')
   // optLocation.value = [optLocation.value[0], optLocation.value[1] + 0.0001]
-  if(!locationMarker) return
+  if (!locationMarker) return
   const lnglat = locationMarker.getPosition()
-  if(!lnglat) return
-  optLocation.value=[lnglat.lng,lnglat.lat+0.0001]
+  if (!lnglat) return
+  optLocation.value = [lnglat.lng, lnglat.lat + 0.0001]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
 const handleArrowDown = () => {
   console.log('down')
   // optLocation.value = [optLocation.value[0], optLocation.value[1] - 0.0001]
-  if(!locationMarker) return
+  if (!locationMarker) return
   const lnglat = locationMarker.getPosition()
-  if(!lnglat) return
-  optLocation.value=[lnglat.lng,lnglat.lat-0.0001]
+  if (!lnglat) return
+  optLocation.value = [lnglat.lng, lnglat.lat - 0.0001]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
 const handleArrowLeft = () => {
   console.log('left')
   // optLocation.value = [optLocation.value[0] - 0.0001, optLocation.value[1]]
-  if(!locationMarker) return
+  if (!locationMarker) return
   const lnglat = locationMarker.getPosition()
-  if(!lnglat) return
-  optLocation.value=[lnglat.lng-0.0001,lnglat.lat]
+  if (!lnglat) return
+  optLocation.value = [lnglat.lng - 0.0001, lnglat.lat]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
 const handleArrowRight = () => {
   console.log('right')
   // optLocation.value = [optLocation.value[0] + 0.0001, optLocation.value[1]]
-  if(!locationMarker) return
+  if (!locationMarker) return
   const lnglat = locationMarker.getPosition()
-  if(!lnglat) return
-  optLocation.value=[lnglat.lng+0.0001,lnglat.lat]
+  if (!lnglat) return
+  optLocation.value = [lnglat.lng + 0.0001, lnglat.lat]
   locationMarker?.setPosition(optLocation.value)
   distanceOverlays()
 }
@@ -143,6 +173,11 @@ const distanceOverlays = () => {
       }
     }
   })
+}
+const handlePolygonAttrDialogClick = (e: string) => {
+  if (e === 'click') {
+    polygonAttrDialog.value = false
+  }
 }
 watch(
   props, (newVal) => {
@@ -237,30 +272,30 @@ onMounted(() => {
 
     locationMarker = new AMap.Marker({
       position: optLocation.value,
-      icon: new AMap.Icon({
-        image: '../public/map-158493_1280.png',
-        imageSize: new AMap.Size(18, 28),
-      }),
+      // icon: new AMap.Icon({
+      //   image: '../public/map-158493_1280.png',
+      //   imageSize: new AMap.Size(18, 28),
+      // }),
       draggable: true
     })
-    locationMarker?.on('dragstart',()=>{
-      if(ifFirstLocation.value){
+    locationMarker?.on('dragstart', () => {
+      if (ifFirstLocation.value) {
         // console.log('dragstart e: ',e.lnglat.lat)
         startLng.value = props.newLng//e.lnglat.lng
         startLat.value = props.newLat//e.lnglat.lat
         ifFirstLocation.value = false
       }
     })
-    locationMarker?.on('dragend',(e:any)=>{
+    locationMarker?.on('dragend', (e: any) => {
       // console.log('dragend e: ',e)
       endLng.value = e.lnglat.lng
       endLat.value = e.lnglat.lat
       deltaLng.value = endLng.value - startLng.value
       deltaLat.value = endLat.value - startLat.value
-      console.log('deltaLng: ',deltaLng.value)
-      console.log('deltaLat: ',deltaLat.value)
+      console.log('deltaLng: ', deltaLng.value)
+      console.log('deltaLat: ', deltaLat.value)
     })
-    locationMarker?.on('rightclick',()=>{
+    locationMarker?.on('rightclick', () => {
       locationMarker?.setDraggable(false)
     })
     // const aContextMenu = new AMap.ContextMenu()
@@ -268,7 +303,7 @@ onMounted(() => {
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
     const changeLastOverlay = () => {
       const lastOverlay = overlays[overlays.length - 1]
-      const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay)
+      const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay, handlePolygonAttrDialog, setPolygonAttrName)
       arrOverlayWithRemarks.push(overlayWithRemarks)
     }
     const draw = (e: string) => {
@@ -347,6 +382,12 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div class="polygon-property-box" v-show="polygonAttrDialog">
+    <PropertyBoxPolygon :if-show="polygonAttrDialog" :recive-name="polygonAttrs.name"
+      :recive-remarks="polygonAttrs.remarks" :recive-if-fill-color="polygonAttrs.ifFillColor"
+      :recive-fill-color="polygonAttrs.fillColor" @handle-check-or-cancel-click="handlePolygonAttrDialogClick"
+      @polygon-attrs="handlePolygonAttrs" />
+  </div>
   <div class="arrow">
     <ArrowButtons @on-arrow-up="handleArrowUp" @on-arrow-down="handleArrowDown" @on-arrow-left="handleArrowLeft"
       @on-arrow-right="handleArrowRight" />
@@ -387,6 +428,13 @@ onUnmounted(() => {
   top: 230px;
   position: absolute;
   z-index: 1;
+}
+
+.polygon-property-box {
+  position: absolute;
+  top: 20px;
+  z-index: 2;
+  background-color: aliceblue;
 }
 </style>
 // const drawtest = (e: MouseEvent) => {

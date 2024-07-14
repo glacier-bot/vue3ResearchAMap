@@ -1,4 +1,3 @@
-<!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <script setup lang="ts">
 import { ref } from 'vue'
 
@@ -10,8 +9,8 @@ const value5 = ref(false) //控制圆形开关
 const arrSwitch = [value1, value2, value3, value4, value5]
 
 const emit = defineEmits({
-  'onSwitchChanged': (payload: { name: string, status: boolean }) => true,
-  'onClearClick': (payload: boolean) => true
+  'onSwitchChanged': (payload: { name: string, status: boolean }) => payload,
+  'onClearClick': (payload: boolean) => payload
 })
 
 const exclusiveTrue = (id: number) => {
@@ -71,7 +70,9 @@ const handleClick = () => {
     <el-col>
       <el-text size="small" type="info">
         提示：请在结束绘制后编辑覆盖物，否则<br />
-        会出现覆盖物无法编辑的bug
+        会出现覆盖物无法编辑的bug；<br />
+        修改圆形覆盖物的填充颜色和填充透明度<br />
+        会出现bug
       </el-text>
     </el-col>
   </el-row>
