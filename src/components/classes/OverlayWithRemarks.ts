@@ -33,6 +33,8 @@ class OverlayWithRemarks {
   #setPolygonAttrName
   #controlHideConst = 0
   #controlShowConst = 0
+  // 鼠标悬停时
+  #mouseOverText: any
 
   constructor(map: any, overlay: any, polygonAttrDialog: any, setPolygonAttrName: any) {
     this.#map = map
@@ -46,6 +48,10 @@ class OverlayWithRemarks {
     })
     this.#overlayType = overlay.obj.CLASS_NAME
     this.#contextMenu = new AMap.ContextMenu()
+    this.#mouseOverText = new AMap.Text({
+      offset: new AMap.Pixel(-20, -10),
+      draggable: false
+    })
     this.#runMain()
   }
 
@@ -246,6 +252,37 @@ class OverlayWithRemarks {
     })
   }
 
+  #setMouseOverText = () => {
+    this.#overlay.obj.on('mouseover', (e: any) => {
+      // console.log('mouse over')
+      this.#mouseOverText.show()
+      switch (this.#overlayType) {
+        case 'Overlay.Polygon':
+        case 'Overlay.Rectangle': {
+          this.#path = this.#overlay.obj.getPath()
+          this.#convertedLocations = this.#path.map((location: any) => {
+            return [location.lng, location.lat]
+          })
+          this.#mouseOverText.setText('【 ' + this.#name + ' 】')
+          // this.#mouseOverText.setPosition(this.#convertedLocations[0])
+          this.#mouseOverText.setPosition(e.lnglat)
+          break
+        }
+        case 'Overlay.Circle': {
+          this.#center = this.#overlay.obj.getCenter()
+          this.#mouseOverText.setText('【 ' + this.#name + ' 】')
+          // this.#mouseOverText.setPosition(this.#center)
+          this.#mouseOverText.setPosition(e.lnglat)
+          break
+        }
+      }
+    })
+    this.#overlay.obj.on('mouseout', () => {
+      // console.log('mouse out')
+      this.#mouseOverText.hide()
+    })
+  }
+
   #runMain = () => {
     this.#setRemarks()
     // this.#remarks.on('rightclick',()=>{this.#remarks.hide()})
@@ -255,6 +292,10 @@ class OverlayWithRemarks {
     this.#setEditor()
     this.#setEvents()
     this.#setContextMenu()
+    if (this.#mouseOverText) {
+      this.#map?.add(this.#mouseOverText)
+    }
+    this.#setMouseOverText()
   }
 
   destructor = () => {
