@@ -10,7 +10,8 @@ const flag = ref(false)
 const emit = defineEmits({
   'onValueChanged': (payload: { latitute: number, longtitute: number }) => payload,
   'onDrawSelected': (payload: string) => payload,
-  'onNotification': (payload: string) => payload
+  'onNotification': (payload: string) => payload,
+  'onSelectTimestamp': (payload: string) => payload
 })
 
 watch([latitute, longtitute], (newVal, oldVal) => {
@@ -29,9 +30,11 @@ const handleSelect = (key: string) => {
       break
     case '2':
       emit('onDrawSelected', 'selected')
+      emit('onSelectTimestamp', new Date().valueOf().toString())
+      // console.log('Selected')
       break
     case '3':
-      flag.value=!flag.value
+      flag.value = !flag.value
       if (flag.value) {
         console.log('Start updating location')
         getGeoLocation()
@@ -39,7 +42,7 @@ const handleSelect = (key: string) => {
         //   console.log('Updating location...')
         //   getGeoLocation()
         // }, 1000)
-      }else{
+      } else {
         console.log('Stop updating location')
         // clearInterval(intervalId)
         navigator.geolocation.clearWatch((window as any).myParams.watchID)
@@ -74,7 +77,7 @@ const getGeoLocation = () => {
         maximumAge: 0
       }
     );
-    (window as any).myParams = {watchID: watchID}
+    (window as any).myParams = { watchID: watchID }
   } else {
     console.log('Geolocation is not supported by this browser.')
   }

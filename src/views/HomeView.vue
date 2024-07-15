@@ -10,6 +10,7 @@ const latitute = ref(0)
 const longtitute = ref(0)
 const drawStatus = ref('')
 const testNum = ref(0)
+const selectTimestamp = ref('')
 
 const handleValueChanged = (payload: { latitute: number, longtitute: number }) => {
   // console.log('payload:', payload)
@@ -35,6 +36,9 @@ const handleNotification = (payload: string) => {
   // console.log('notification:', payload)
   openNotification(payload)
 }
+const handleSelectTimestamp = (payload: string) => {
+  selectTimestamp.value = payload
+}
 
 </script>
 
@@ -42,13 +46,14 @@ const handleNotification = (payload: string) => {
   <el-container class="outter-main">
     <el-aside width="150px">
       <Aside @on-value-changed="handleValueChanged" @on-draw-selected="handleDrawSelected"
-        @on-notification="handleNotification" />
+        @on-notification="handleNotification" @on-select-timestamp="handleSelectTimestamp" />
     </el-aside>
     <el-container class="main">
       <el-main>
         <!-- <CollapseItem class="collapse" /> -->
         <div class="notification" />
-        <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" :draw-status="`${drawStatus}`" />
+        <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" :draw-status="`${drawStatus}`"
+          :selectTime="`${selectTimestamp}`" />
       </el-main>
     </el-container>
   </el-container>

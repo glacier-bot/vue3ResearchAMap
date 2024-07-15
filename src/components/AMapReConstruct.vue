@@ -33,7 +33,7 @@ declare global {
   }
 }
 
-const props = defineProps(['newLng', 'newLat', 'drawStatus']) //{ newLng: String, newLat: String }
+const props = defineProps(['newLng', 'newLat', 'drawStatus', 'selectTime']) //{ newLng: String, newLat: String }
 let overlays: any[] = []
 const ifEdit = ref(false)
 const optLocation = ref<[number, number]>([0, 0])
@@ -190,7 +190,12 @@ watch(
         break
       }
       case 'selected': {
-        ifEdit.value = true
+        // ifEdit.value = true
+        if (newVal.selectTime) {
+          // console.log('selectTime: ', newVal.selectTime)
+          ifEdit.value = !ifEdit.value
+          // console.log('ifEdit: ', ifEdit.value)
+        }
         break
       }
       case 'settings': {
