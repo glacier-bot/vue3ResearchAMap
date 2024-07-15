@@ -16,7 +16,7 @@ class OverlayWithRemarks {
   #polygonAttrDialog: any
   #overlayType: string
   #remarks: any
-  #remarkShow = true // 待办：用this.#remarks.getVisible()代替
+  #remarkShow = true
   #hideRemark = false
   #showRemark = false
   // 如果是矩形和多边形
@@ -31,6 +31,8 @@ class OverlayWithRemarks {
   // 右键菜单
   #contextMenu: any
   #setPolygonAttrName
+  #controlHideConst = 0
+  #controlShowConst = 0
 
   constructor(map: any, overlay: any, polygonAttrDialog: any, setPolygonAttrName: any) {
     this.#map = map
@@ -167,11 +169,15 @@ class OverlayWithRemarks {
   #hideRemarks = () => {
     this.#remarks.hide()
     this.#contextMenu.close()
+    this.#remarkShow = false
+    this.#controlHideConst = 0
   }
 
   #showRemarks = () => {
     this.#remarks.show()
     this.#contextMenu.close()
+    this.#remarkShow = true
+    this.#controlShowConst = 0
   }
 
   #setContextMenu = () => {
@@ -204,19 +210,23 @@ class OverlayWithRemarks {
     })
     this.#contextMenu.on('open', () => {
       // console.log('open context menu')
-      console.log('show: ', this.#remarkShow)
+      // console.log('show: ', this.#remarkShow)
       if (this.#remarkShow) {
         if (!this.#hideRemark) {
-          this.#contextMenu.addItem('隐藏标签', this.#hideRemarks, 1)
+          if (this.#controlHideConst === 0) {
+            this.#contextMenu.addItem('隐藏标签', this.#hideRemarks, 1)
+          }
+          this.#controlHideConst++
         }
         this.#contextMenu.removeItem('显示标签', this.#showRemarks)
-        this.#remarkShow = false
       } else {
         if (this.#showRemark) {
-          this.#contextMenu.addItem('显示标签', this.#showRemarks, 2)
+          if (this.#controlShowConst === 0) {
+            this.#contextMenu.addItem('显示标签', this.#showRemarks, 2)
+          }
+          this.#controlShowConst++
         }
         this.#contextMenu.removeItem('隐藏标签', this.#hideRemarks)
-        this.#remarkShow = true
       }
       this.#hideRemark = !this.#hideRemark
       this.#showRemark = !this.#showRemark
