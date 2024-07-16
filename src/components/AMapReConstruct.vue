@@ -255,6 +255,10 @@ watch(
           map?.panTo(optLocation.value)
           map?.setZoom(16)
           locationMarker?.setPosition(optLocation.value)
+          locationMarker?.setIcon(new AMap.Icon({
+            image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png',
+            imageSize: new AMap.Size(30, 40),
+          }))
           if (!locationMarker) { return }
           map?.add(
             locationMarker

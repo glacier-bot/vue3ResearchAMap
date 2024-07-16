@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import AMap from '../components/AMapReConstruct.vue'
 import Aside from '../components/AsideItem.vue'
 import { ElNotification } from 'element-plus'
+import { Location, SemiSelect, CircleCheck, Compass } from '@element-plus/icons-vue'
 // import CollapseItem from '@/components/CollapseItem.vue';
 
 const latitute = ref(0)
@@ -24,21 +25,26 @@ const handleDrawSelected = (payload: string) => {
 const openNotification = (str: any) => {
   // testNum.value += 1
   let triggerStr = ''
+  let triggerIcon: any
   switch (str.triggerType) {
     case 'point': {
       triggerStr = '已到达 ' + str.triggerName + ' 点位附近，<br/>距离：' + str.triggerDistance + ' 米'
+      triggerIcon = Location
       break
     }
     case 'polyline': {
       triggerStr = '已到达 ' + str.triggerName + ' 路线附近，<br/>距离：' + str.triggerDistance + ' 米'
+      triggerIcon = SemiSelect
       break
     }
     case 'circle': {
       triggerStr = '已位于 ' + str.triggerName + ' 圆形范围内，<br/>半径：' + str.triggerRadius + ' 米，距离圆心：' + str.triggerDistance + ' 米'
+      triggerIcon = CircleCheck
       break
     }
     default: {
       triggerStr = '已位于 ' + str.triggerName + ' 区域内'
+      triggerIcon = Compass
       break
     }
   }
@@ -46,7 +52,8 @@ const openNotification = (str: any) => {
     title: '到达提示',
     // message: '已到达 ' + str + ': ' + testNum.value + ' 附近',
     message: triggerStr,
-    type: 'info',
+    // type: 'info',
+    icon: triggerIcon,
     duration: 4500,
     appendTo: document.querySelector('.notification') as HTMLElement,
     zIndex: 1000,
