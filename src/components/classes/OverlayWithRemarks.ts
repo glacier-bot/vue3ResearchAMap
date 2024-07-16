@@ -308,10 +308,11 @@ class OverlayWithRemarks {
 
   destructor = () => {
     // console.log('调用析构函数')
-    this.editor.close()
     this.#remarks.remove()
     this.#map.remove(this.overlay.obj)
     this.#delInArray(this.id)
+    if (this.#overlayType === 'AMap.Marker') return
+    this.editor.close()
   }
 }
 

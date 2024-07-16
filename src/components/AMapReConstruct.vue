@@ -259,6 +259,14 @@ watch(
             image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png',
             imageSize: new AMap.Size(30, 40),
           }))
+          // const aContextMenu = new AMap.ContextMenu()
+          // aContextMenu.addItem('删除定位点', () => {
+          //   console.log('删除定位点')
+          // }, 0)
+          // locationMarker?.on('rightclick', (e) => {
+          //   if (!map) return
+          //   aContextMenu.open(map, e.lnglat)
+          // })
           if (!locationMarker) { return }
           map?.add(
             locationMarker
@@ -362,7 +370,14 @@ onMounted(() => {
         }
         case 'value2': {
           mouseTool.polyline({
-            strokeColor: '#80d8ff'
+            isOutline: true,
+            outlineColor: '#ff0000',
+            borderWeight: 3,
+            strokeColor: '#80d8ff',
+            strokeWeight: 10,
+            lineCap: 'round',
+            lineJoin: 'round',
+            showDir: true
           })
           break
         }
