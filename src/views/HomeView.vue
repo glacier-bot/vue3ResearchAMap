@@ -9,7 +9,7 @@ import { ElNotification } from 'element-plus'
 const latitute = ref(0)
 const longtitute = ref(0)
 const drawStatus = ref('')
-const testNum = ref(0)
+// const testNum = ref(0)
 const selectTimestamp = ref('')
 
 const handleValueChanged = (payload: { latitute: number, longtitute: number }) => {
@@ -21,15 +21,36 @@ const handleDrawSelected = (payload: string) => {
   // console.log('select: ', payload)
   drawStatus.value = payload
 }
-const openNotification = (str: string) => {
-  testNum.value += 1
+const openNotification = (str: any) => {
+  // testNum.value += 1
+  let triggerStr = ''
+  switch (str.triggerType) {
+    case 'point': {
+      triggerStr = '已到达 ' + str.triggerName + ' 点位附近，<br/>距离：' + str.triggerDistance + ' 米'
+      break
+    }
+    case 'polyline': {
+      triggerStr = '已到达 ' + str.triggerName + ' 路线附近，<br/>距离：' + str.triggerDistance + ' 米'
+      break
+    }
+    case 'circle': {
+      triggerStr = '已位于 ' + str.triggerName + ' 圆形范围内，<br/>半径：' + str.triggerRadius + ' 米，距离圆心：' + str.triggerDistance + ' 米'
+      break
+    }
+    default: {
+      triggerStr = '已位于 ' + str.triggerName + ' 区域内'
+      break
+    }
+  }
   ElNotification({
     title: '到达提示',
-    message: '已到达 ' + str + ': ' + testNum.value + ' 附近',
+    // message: '已到达 ' + str + ': ' + testNum.value + ' 附近',
+    message: triggerStr,
     type: 'info',
     duration: 4500,
     appendTo: document.querySelector('.notification') as HTMLElement,
-    zIndex: 1000
+    zIndex: 1000,
+    dangerouslyUseHTMLString: true
   })
 }
 const handleNotification = (payload: string) => {
@@ -38,6 +59,9 @@ const handleNotification = (payload: string) => {
 }
 const handleSelectTimestamp = (payload: string) => {
   selectTimestamp.value = payload
+}
+const handleDistanceTrigger = (payload: string) => {
+  openNotification(payload)
 }
 
 </script>
@@ -53,7 +77,7 @@ const handleSelectTimestamp = (payload: string) => {
         <!-- <CollapseItem class="collapse" /> -->
         <div class="notification" />
         <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" :draw-status="`${drawStatus}`"
-          :selectTime="`${selectTimestamp}`" />
+          :selectTime="`${selectTimestamp}`" @on-distance-trigger="handleDistanceTrigger" />
       </el-main>
     </el-container>
   </el-container>

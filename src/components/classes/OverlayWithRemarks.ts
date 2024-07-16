@@ -9,10 +9,10 @@ declare global {
 class OverlayWithRemarks {
   // 初始化属性
   id: string
-  #name = 'id: ' + new Date().valueOf().toString()
+  name = 'id: ' + new Date().valueOf().toString()
   #beizhu = '初始化备注'
   #map: any
-  #overlay: any
+  overlay: any
   #polygonAttrDialog: any
   #overlayType: string
   #remarks: any
@@ -33,12 +33,19 @@ class OverlayWithRemarks {
   #setPolygonAttrName
   #controlHideConst = 0
   #controlShowConst = 0
+  #delInArray: any
   // 鼠标悬停时
   #mouseOverText: any
 
-  constructor(map: any, overlay: any, polygonAttrDialog: any, setPolygonAttrName: any) {
+  constructor(
+    map: any,
+    overlay: any,
+    polygonAttrDialog: any,
+    setPolygonAttrName: any,
+    delInArray: any
+  ) {
     this.#map = map
-    this.#overlay = overlay
+    this.overlay = overlay
     this.id = new Date().valueOf().toString()
     this.#polygonAttrDialog = polygonAttrDialog
     this.#setPolygonAttrName = setPolygonAttrName
@@ -52,6 +59,7 @@ class OverlayWithRemarks {
       offset: new AMap.Pixel(-20, -10),
       draggable: false
     })
+    this.#delInArray = delInArray
     this.#runMain()
   }
 
@@ -77,7 +85,7 @@ class OverlayWithRemarks {
     switch (this.#overlayType) {
       case 'Overlay.Polygon':
       case 'Overlay.Rectangle': {
-        this.#path = this.#overlay.obj.getPath()
+        this.#path = this.overlay.obj.getPath()
         this.#convertedLocations = this.#path.map((location: any) => {
           return [location.lng, location.lat]
         })
@@ -91,8 +99,8 @@ class OverlayWithRemarks {
         break
       }
       case 'Overlay.Circle': {
-        this.#center = this.#overlay.obj.getCenter()
-        this.#radius = this.#overlay.obj.getRadius()
+        this.#center = this.overlay.obj.getCenter()
+        this.#radius = this.overlay.obj.getRadius()
         const area = this.#circleArea(this.#radius)
         if (area) {
           this.#remarks.setText('区域面积: ' + area)
@@ -108,7 +116,7 @@ class OverlayWithRemarks {
   #setEditor = () => {
     switch (this.#overlayType) {
       case 'Overlay.Polygon': {
-        this.editor = new AMap.PolyEditor(this.#map, this.#overlay.obj)
+        this.editor = new AMap.PolyEditor(this.#map, this.overlay.obj)
         this.editor.on('adjust', (e: any) => {
           this.#convertedLocations = e.target.getPath().map(function (location: any) {
             return [location.lng, location.lat]
@@ -119,11 +127,11 @@ class OverlayWithRemarks {
         break
       }
       case 'Overlay.Polyline': {
-        this.editor = new AMap.PolyEditor(this.#map, this.#overlay.obj)
+        this.editor = new AMap.PolyEditor(this.#map, this.overlay.obj)
         break
       }
       case 'Overlay.Rectangle': {
-        this.editor = new AMap.RectangleEditor(this.#map, this.#overlay.obj)
+        this.editor = new AMap.RectangleEditor(this.#map, this.overlay.obj)
         this.editor.on('adjust', (e: any) => {
           this.#convertedLocations = e.target.getPath().map(function (location: any) {
             return [location.lng, location.lat]
@@ -134,7 +142,7 @@ class OverlayWithRemarks {
         break
       }
       case 'Overlay.Circle': {
-        this.editor = new AMap.CircleEditor(this.#map, this.#overlay.obj)
+        this.editor = new AMap.CircleEditor(this.#map, this.overlay.obj)
         this.editor.on('adjust', (e: any) => {
           this.#center = e.target.getCenter()
           this.#radius = e.target.getRadius()
@@ -147,7 +155,7 @@ class OverlayWithRemarks {
 
   #setEvents = () => {
     // 绑定左键事件：编辑器的打开和关闭
-    this.#overlay.obj.on('click', () => {
+    this.overlay.obj.on('click', () => {
       if (this.editor) {
         this.editor.close()
       }
@@ -159,7 +167,7 @@ class OverlayWithRemarks {
       }
     })
     // 绑定右键事件：1.控制标签显示; 2.打开右键菜单
-    this.#overlay.obj.on('rightclick', (e: any) => {
+    this.overlay.obj.on('rightclick', (e: any) => {
       // if (!this.#remarkShow) {
       //   this.#remarks.show()
       //   this.#remarkShow = true
@@ -198,10 +206,10 @@ class OverlayWithRemarks {
         //传递当前覆盖物的属性
         this.#setPolygonAttrName({
           id: this.id,
-          name: this.#name,
+          name: this.name,
           remarks: this.#beizhu,
-          ifFillColor: this.#overlay.obj.getOptions().fillOpacity > 0 ? true : false,
-          fillColor: this.#overlay.obj.getOptions().fillColor
+          ifFillColor: this.overlay.obj.getOptions().fillOpacity > 0 ? true : false,
+          fillColor: this.overlay.obj.getOptions().fillColor
         })
         this.#polygonAttrDialog()
         this.#contextMenu.close()
@@ -244,40 +252,40 @@ class OverlayWithRemarks {
 
   sendAttrs = (attrs: any) => {
     if (attrs.id !== this.id) return
-    this.#name = attrs.name
+    this.name = attrs.name
     this.#beizhu = attrs.remarks
-    this.#overlay.obj.setOptions({
+    this.overlay.obj.setOptions({
       fillOpacity: attrs.ifFillColor ? 0.5 : 0,
       fillColor: attrs.fillColor
     })
   }
 
   #setMouseOverText = () => {
-    this.#overlay.obj.on('mouseover', (e: any) => {
+    this.overlay.obj.on('mouseover', (e: any) => {
       // console.log('mouse over')
       this.#mouseOverText.show()
       switch (this.#overlayType) {
         case 'Overlay.Polygon':
         case 'Overlay.Rectangle': {
-          this.#path = this.#overlay.obj.getPath()
+          this.#path = this.overlay.obj.getPath()
           this.#convertedLocations = this.#path.map((location: any) => {
             return [location.lng, location.lat]
           })
-          this.#mouseOverText.setText('【 ' + this.#name + ' 】')
+          this.#mouseOverText.setText('【 ' + this.name + ' 】')
           // this.#mouseOverText.setPosition(this.#convertedLocations[0])
           this.#mouseOverText.setPosition(e.lnglat)
           break
         }
         case 'Overlay.Circle': {
-          this.#center = this.#overlay.obj.getCenter()
-          this.#mouseOverText.setText('【 ' + this.#name + ' 】')
+          this.#center = this.overlay.obj.getCenter()
+          this.#mouseOverText.setText('【 ' + this.name + ' 】')
           // this.#mouseOverText.setPosition(this.#center)
           this.#mouseOverText.setPosition(e.lnglat)
           break
         }
       }
     })
-    this.#overlay.obj.on('mouseout', () => {
+    this.overlay.obj.on('mouseout', () => {
       // console.log('mouse out')
       this.#mouseOverText.hide()
     })
@@ -302,7 +310,8 @@ class OverlayWithRemarks {
     // console.log('调用析构函数')
     this.editor.close()
     this.#remarks.remove()
-    this.#map.remove(this.#overlay.obj)
+    this.#map.remove(this.overlay.obj)
+    this.#delInArray(this.id)
   }
 }
 

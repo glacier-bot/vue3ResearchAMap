@@ -33,6 +33,10 @@ declare global {
   }
 }
 
+const emit = defineEmits({
+  'onDistanceTrigger': (payload: any) => payload,
+})
+
 const props = defineProps(['newLng', 'newLat', 'drawStatus', 'selectTime']) //{ newLng: String, newLat: String }
 let overlays: any[] = []
 const ifEdit = ref(false)
@@ -140,35 +144,63 @@ const handleArrowRight = () => {
 }
 const distanceOverlays = () => {
   // console.log('distance overlays: ', overlays.value)
-  if (!overlays) return
-  overlays.forEach((overlay) => {
-    // console.log('overlay class name: ', overlay.className)
-    switch (overlay.className) {
+  if (!arrOverlayWithRemarks) return
+  arrOverlayWithRemarks.forEach((wrappedOverlay) => {
+    // console.log('overlay class: ', wrappedOverlay)
+    switch (wrappedOverlay.overlay.obj.CLASS_NAME) {
       case 'AMap.Marker': {
         //计算两点之间的距离
-        const pointDistance = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.obj.getPosition())
+        const pointDistance = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPosition())
         console.log('pointDistance: ', pointDistance)
+        if (pointDistance <= 100 && pointDistance >= 3) {
+          emit('onDistanceTrigger', {
+            triggerType: 'point',
+            triggerName: wrappedOverlay.name,
+            triggerDistance: pointDistance.toFixed(2),
+          })
+        }
         break
       }
       case 'Overlay.Polyline': {
         //计算点到直线的距离
-        const lineDistance = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, overlay.obj.getPath())
+        const lineDistance = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
         console.log('lineDistance: ', lineDistance)
+        if (lineDistance <= 100 && lineDistance >= 3) {
+          emit('onDistanceTrigger', {
+            triggerType: 'polyline',
+            triggerName: wrappedOverlay.name,
+            triggerDistance: lineDistance.toFixed(2),
+          })
+        }
         break
       }
       case 'Overlay.Circle': {
         //计算点到圆心的距离与圆半径的关系
-        const toCircleCenter = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, overlay.obj.getCenter())
-        const pointCircle = toCircleCenter - overlay.obj.getRadius() <= 0 ? true : false
+        const toCircleCenter = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getCenter())
+        const pointCircle = toCircleCenter - wrappedOverlay.overlay.obj.getRadius() <= 0 ? true : false
         // console.log('toCircleCenter: ', toCircleCenter)
         // console.log('radius: ', overlay.getRadius())
         console.log('pointCircle: ', pointCircle)
+        if (pointCircle) {
+          emit('onDistanceTrigger', {
+            triggerType: 'circle',
+            triggerName: wrappedOverlay.name,
+            triggerDistance: toCircleCenter.toFixed(2),
+            triggerRadius: wrappedOverlay.overlay.obj.getRadius().toFixed(2),
+          })
+        }
         break
       }
       default: {
         //判断是否在区域内
-        const pointRing = AMap.GeometryUtil.isPointInRing(locationMarker?.getPosition() as any, overlay.obj.getPath())
+        const pointRing = AMap.GeometryUtil.isPointInRing(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
         console.log('pointRing: ', pointRing)
+        if (pointRing) {
+          emit('onDistanceTrigger', {
+            triggerType: 'ring',
+            triggerName: wrappedOverlay.name,
+          })
+        }
         break
       }
     }
@@ -177,6 +209,12 @@ const distanceOverlays = () => {
 const handlePolygonAttrDialogClick = (e: string) => {
   if (e === 'click') {
     polygonAttrDialog.value = false
+  }
+}
+const delInArray = (id: any) => {
+  let index = arrOverlayWithRemarks.findIndex(item => item.id === id)
+  if (index !== -1) {
+    arrOverlayWithRemarks.splice(index, 1)
   }
 }
 watch(
@@ -308,7 +346,7 @@ onMounted(() => {
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
     const changeLastOverlay = () => {
       const lastOverlay = overlays[overlays.length - 1]
-      const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay, handlePolygonAttrDialog, setPolygonAttrName)
+      const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay, handlePolygonAttrDialog, setPolygonAttrName, delInArray)
       arrOverlayWithRemarks.push(overlayWithRemarks)
     }
     const draw = (e: string) => {
@@ -356,8 +394,10 @@ onMounted(() => {
       // console.log('remove overlay')
       // map?.remove(overlays.value)
       arrOverlayWithRemarks.forEach((overlay) => {
-        overlay.editor.close()
-        overlay.destructor()
+        if (overlay.overlay.obj.CLASS_NAME !== 'AMap.Marker') {
+          overlay.editor.close()
+          overlay.destructor()
+        }
         overlay = null
       })
       arrOverlayWithRemarks = []
