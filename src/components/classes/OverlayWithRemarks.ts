@@ -14,7 +14,7 @@ class OverlayWithRemarks {
   #map: any
   overlay: any
   #polygonAttrDialog: any
-  #overlayType: string
+  overlayType: string
   #remarks: any
   #remarkShow = true
   #hideRemark = false
@@ -53,7 +53,7 @@ class OverlayWithRemarks {
       offset: new AMap.Pixel(-20, -20),
       draggable: false
     })
-    this.#overlayType = overlay.obj.CLASS_NAME
+    this.overlayType = overlay.obj.CLASS_NAME
     this.#contextMenu = new AMap.ContextMenu()
     this.#mouseOverText = new AMap.Text({
       offset: new AMap.Pixel(-20, -10),
@@ -82,7 +82,7 @@ class OverlayWithRemarks {
   }
 
   #setRemarks = () => {
-    switch (this.#overlayType) {
+    switch (this.overlayType) {
       case 'Overlay.Polygon':
       case 'Overlay.Rectangle': {
         this.#path = this.overlay.obj.getPath()
@@ -114,7 +114,7 @@ class OverlayWithRemarks {
   }
 
   #setEditor = () => {
-    switch (this.#overlayType) {
+    switch (this.overlayType) {
       case 'Overlay.Polygon': {
         this.editor = new AMap.PolyEditor(this.#map, this.overlay.obj)
         this.editor.on('adjust', (e: any) => {
@@ -206,10 +206,21 @@ class OverlayWithRemarks {
         //传递当前覆盖物的属性
         this.#setPolygonAttrName({
           id: this.id,
+          type: this.overlayType,
           name: this.name,
           remarks: this.#beizhu,
-          ifFillColor: this.overlay.obj.getOptions().fillOpacity > 0 ? true : false,
+          opacity:
+            this.overlay.obj.getOptions().fillOpacity >= 0
+              ? this.overlay.obj.getOptions().fillOpacity
+              : this.overlay.obj.getOptions().strokeOpacity,
+          ifFillColor:
+            this.overlay.obj.getOptions().fillOpacity >= 0 ||
+            this.overlay.obj.getOptions().strokeOpacity >= 0
+              ? true
+              : false,
           fillColor: this.overlay.obj.getOptions().fillColor
+            ? this.overlay.obj.getOptions().fillColor
+            : this.overlay.obj.getOptions().strokeColor
         })
         this.#polygonAttrDialog()
         this.#contextMenu.close()
@@ -254,8 +265,15 @@ class OverlayWithRemarks {
     if (attrs.id !== this.id) return
     this.name = attrs.name
     this.#beizhu = attrs.remarks
+    if (attrs.type === 'Overlay.Polyline') {
+      this.overlay.obj.setOptions({
+        strokeColor: attrs.fillColor,
+        strokeOpacity: attrs.opacity
+      })
+      return
+    }
     this.overlay.obj.setOptions({
-      fillOpacity: attrs.ifFillColor ? 0.5 : 0,
+      fillOpacity: attrs.opacity,
       fillColor: attrs.fillColor
     })
   }
@@ -264,7 +282,7 @@ class OverlayWithRemarks {
     this.overlay.obj.on('mouseover', (e: any) => {
       // console.log('mouse over')
       this.#mouseOverText.show()
-      switch (this.#overlayType) {
+      switch (this.overlayType) {
         case 'Overlay.Polygon':
         case 'Overlay.Rectangle': {
           this.#path = this.overlay.obj.getPath()
@@ -311,7 +329,7 @@ class OverlayWithRemarks {
     this.#remarks.remove()
     this.#map.remove(this.overlay.obj)
     this.#delInArray(this.id)
-    if (this.#overlayType === 'AMap.Marker') return
+    if (this.overlayType === 'AMap.Marker') return
     this.editor.close()
   }
 }

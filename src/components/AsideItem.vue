@@ -103,7 +103,7 @@ const getGeoLocationOnce = () => {
       <el-icon>
         <Location />
       </el-icon>
-      校准定位
+      初始化定位
     </el-menu-item>
     <el-menu-item index="3">
       <el-icon>

@@ -6,7 +6,9 @@ const props = defineProps({
   reciveName: String,
   reciveRemarks: String,
   reciveIfFillColor: Boolean,
-  reciveFillColor: String
+  reciveFillColor: String,
+  reciveType: String,
+  reciveOpacity: Number,
 })
 
 const form = reactive({
@@ -14,7 +16,9 @@ const form = reactive({
   remarks: 'testRemarks',
   ifFillColor: true,
   fillColor: '#00B2D5',
-  show: true
+  show: true,
+  ifRing: true,
+  opacity: 1,
 })
 
 const emit = defineEmits({
@@ -41,21 +45,38 @@ watch(props, (newProps: any) => {
   form.remarks = newProps.reciveRemarks
   form.ifFillColor = newProps.reciveIfFillColor
   form.fillColor = newProps.reciveFillColor
+  form.opacity = newProps.reciveOpacity
+  // console.log('多边形类型：', newProps.reciveType)
+  switch (newProps.reciveType) {
+    case 'AMap.Marker': {
+      console.log('不显示')
+      form.ifRing = false
+      form.ifFillColor = true
+      break
+    }
+    default: {
+      console.log('显示')
+      form.ifRing = true
+      break
+    }
+  }
 })
 </script>
 
 <template>
   <div :v-show="props.ifShow">
-    <el-dialog class="form" v-model="form.show" title="设置多边形属性" draggable :show-close="false">
+    <el-dialog class="form" v-model="form.show" title="设置覆盖物属性" draggable :show-close="false">
       <el-form :model="form" label-width="auto" style="max-width:600px">
-        <el-form-item label="多边形名称">
-          <el-input v-model="form.name" placeholder="请输入多边形名称" clearable />
+        <el-form-item label="覆盖物名称">
+          <el-input v-model="form.name" placeholder="请输入覆盖物名称" clearable />
         </el-form-item>
-        <el-form-item label="是否填充多边形">
-          <el-switch v-model="form.ifFillColor" active-text="是" inactive-text="否" />
+        <el-form-item label="填充透明度">
+          <el-slider v-model="form.opacity" :disabled="!form.ifFillColor || !form.ifRing" show-input size="small"
+            :step=0.01 :min=0 :max=1 />
+          <!-- <el-switch v-model="form.ifFillColor" active-text="是" inactive-text="否" :disabled="!form.ifRing" /> -->
         </el-form-item>
         <el-form-item label="填充颜色">
-          <el-color-picker v-model="form.fillColor" :disabled="!form.ifFillColor" />
+          <el-color-picker v-model="form.fillColor" :disabled="!form.ifFillColor || !form.ifRing" />
         </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="form.remarks" type="textarea" />

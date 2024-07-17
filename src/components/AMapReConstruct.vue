@@ -8,9 +8,7 @@ import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 import OverlayWithRemarks from './classes/OverlayWithRemarks'
 import PropertyBoxPolygon from './dialogs/PropertyBoxPolygon.vue'
 
-// 待办：1.在marker上右键没用，打不开菜单；2.删除显示面积的文本标签后，无法再次添加
 // 功能：1.自定义覆盖物的属性，2.在页面下方显示状态栏，动态更新定位点与覆盖物之间的关系
-// bug: 1.矩形、多边形、圆形的面积显示有问题
 
 declare global {
   interface Window {
@@ -61,23 +59,28 @@ const handlePolygonAttrDialog = () => {
 }
 const polygonAttrs = ref({
   id: '114514',
+  type: 'polygon',
   name: 'testName',
   remarks: 'testRemarks',
   ifFillColor: true,
   fillColor: '#00B2D5',
+  opacity: 1,
 })
 const setPolygonAttrName = (e: any) => {
   polygonAttrs.value.id = e.id
+  polygonAttrs.value.type = e.type
   polygonAttrs.value.name = e.name
   polygonAttrs.value.remarks = e.remarks
   polygonAttrs.value.ifFillColor = e.ifFillColor
   polygonAttrs.value.fillColor = e.fillColor
+  polygonAttrs.value.opacity = e.opacity
 }
 const handlePolygonAttrs = (e: any) => {
   polygonAttrs.value.name = e.name
   polygonAttrs.value.remarks = e.remarks
   polygonAttrs.value.ifFillColor = e.ifFillColor
   polygonAttrs.value.fillColor = e.fillColor
+  polygonAttrs.value.opacity = e.opacity
   arrOverlayWithRemarks.forEach((overlay) => {
     overlay.sendAttrs(polygonAttrs.value)
   })
@@ -449,7 +452,8 @@ onUnmounted(() => {
   <div class="polygon-property-box" v-show="polygonAttrDialog">
     <PropertyBoxPolygon :if-show="polygonAttrDialog" :recive-name="polygonAttrs.name"
       :recive-remarks="polygonAttrs.remarks" :recive-if-fill-color="polygonAttrs.ifFillColor"
-      :recive-fill-color="polygonAttrs.fillColor" @handle-check-or-cancel-click="handlePolygonAttrDialogClick"
+      :recive-fill-color="polygonAttrs.fillColor" :recive-type="polygonAttrs.type"
+      :recive-opacity="polygonAttrs.opacity" @handle-check-or-cancel-click="handlePolygonAttrDialogClick"
       @polygon-attrs="handlePolygonAttrs" />
   </div>
   <div class="arrow">
@@ -489,7 +493,7 @@ onUnmounted(() => {
 }
 
 .arrow {
-  top: 230px;
+  top: 30px;
   position: absolute;
   z-index: 1;
 }
