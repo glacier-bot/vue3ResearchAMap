@@ -3,6 +3,7 @@ import { ref } from 'vue';
 // import AMap from '../components/AMap.vue'
 import AMap from '../components/AMapReConstruct.vue'
 import Aside from '../components/AsideItem.vue'
+import DrawerManager from '../components/DrawerManager.vue'
 import { ElNotification } from 'element-plus'
 import { Location, SemiSelect, CircleCheck, Compass } from '@element-plus/icons-vue'
 // import CollapseItem from '@/components/CollapseItem.vue';
@@ -12,6 +13,8 @@ const longtitute = ref(0)
 const drawStatus = ref('')
 // const testNum = ref(0)
 const selectTimestamp = ref('')
+const manageSelect = ref('')
+const overlayData = ref<any[]>([])
 
 const handleValueChanged = (payload: { latitute: number, longtitute: number }) => {
   // console.log('payload:', payload)
@@ -70,21 +73,77 @@ const handleSelectTimestamp = (payload: string) => {
 const handleDistanceTrigger = (payload: string) => {
   openNotification(payload)
 }
-
+const handleManageSelect = () => {
+  // console.log('manage:', payload)
+  manageSelect.value = new Date().valueOf().toString()
+}
+const handleOverlayDataEmit = (payload: any) => {
+  console.log('Emit payload:', payload)
+  let num = 0
+  const arr = payload.map((item: any) => {
+    num++
+    switch (item.overlayType) {
+      case 'AMap.Marker': {
+        return {
+          orderNumber: num,
+          overlayIcon: 'Point',
+          overlayType: '点位',
+          overlayState: item.state,
+          overlayDistance: item.distance,
+          overlayNname: item.name
+        }
+      }
+      case 'Overlay.Polyline': {
+        return {
+          orderNumber: num,
+          overlayIcon: 'Polyline',
+          overlayType: '路线',
+          overlayState: item.state,
+          overlayDistance: item.distance,
+          overlayNname: item.name
+        }
+      }
+      case 'Overlay.Circle': {
+        return {
+          orderNumber: num,
+          overlayIcon: 'Circle',
+          overlayType: '圆形范围',
+          overlayState: item.state,
+          overlayDistance: item.distance,
+          overlayNname: item.name
+        }
+      }
+      default: {
+        return {
+          orderNumber: num,
+          overlayIcon: 'Polygon',
+          overlayType: '多边形',
+          overlayState: item.state,
+          overlayDistance: item.distance,
+          overlayNname: item.name
+        }
+      }
+    }
+  })
+  overlayData.value = arr
+}
 </script>
 
 <template>
   <el-container class="outter-main">
-    <el-aside width="150px">
+    <el-aside width="210px">
       <Aside @on-value-changed="handleValueChanged" @on-draw-selected="handleDrawSelected"
-        @on-notification="handleNotification" @on-select-timestamp="handleSelectTimestamp" />
+        @on-notification="handleNotification" @on-select-timestamp="handleSelectTimestamp"
+        @on-manage-selected="handleManageSelect" />
     </el-aside>
     <el-container class="main">
       <el-main>
         <!-- <CollapseItem class="collapse" /> -->
+        <DrawerManager :model-value="manageSelect" :overlay-data="overlayData" />
         <div class="notification" />
         <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" :draw-status="`${drawStatus}`"
-          :selectTime="`${selectTimestamp}`" @on-distance-trigger="handleDistanceTrigger" />
+          :selectTime="`${selectTimestamp}`" @on-distance-trigger="handleDistanceTrigger"
+          @on-overlay-data-emit="handleOverlayDataEmit" />
       </el-main>
     </el-container>
   </el-container>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Location, Setting, Edit } from '@element-plus/icons-vue'
+import { Location, Setting, Edit, Guide } from '@element-plus/icons-vue'
 
 const latitute = ref(0)
 const longtitute = ref(0)
@@ -11,7 +11,8 @@ const emit = defineEmits({
   'onValueChanged': (payload: { latitute: number, longtitute: number }) => payload,
   'onDrawSelected': (payload: string) => payload,
   'onNotification': (payload: string) => payload,
-  'onSelectTimestamp': (payload: string) => payload
+  'onSelectTimestamp': (payload: string) => payload,
+  'onManageSelected': (payload: string) => payload
 })
 
 watch([latitute, longtitute], (newVal, oldVal) => {
@@ -23,17 +24,19 @@ watch([latitute, longtitute], (newVal, oldVal) => {
 const handleSelect = (key: string) => {
   // console.log('key:', key)
   switch (key) {
-    case '1':
+    case '1': {
       // console.log('Location')
       getGeoLocationOnce()
       emit('onDrawSelected', 'location')
       break
-    case '2':
+    }
+    case '2': {
       emit('onDrawSelected', 'selected')
       emit('onSelectTimestamp', new Date().valueOf().toString())
       // console.log('Selected')
       break
-    case '3':
+    }
+    case '3': {
       flag.value = !flag.value
       if (flag.value) {
         console.log('Start updating location')
@@ -48,12 +51,18 @@ const handleSelect = (key: string) => {
         navigator.geolocation.clearWatch((window as any).myParams.watchID)
       }
       break
-    case '9':
+    }
+    case '4': {
+      emit('onManageSelected', 'manage')
+      break
+    }
+    case '9': {
       // console.log('Setting')
       // alert('Setting')
       emit('onDrawSelected', 'settings')
       emit('onNotification', 'Setting')
       break
+    }
   }
 }
 
@@ -117,6 +126,12 @@ const getGeoLocationOnce = () => {
       </el-icon>
       创建覆盖物
     </el-menu-item>
+    <el-menu-item index="4">
+      <el-icon>
+        <Guide />
+      </el-icon>
+      覆盖物与到达提示管理
+    </el-menu-item>
     <el-menu-item index="9">
       <el-icon>
         <Setting />
@@ -132,6 +147,6 @@ const getGeoLocationOnce = () => {
 
 <style scoped lang="less">
 .el-menu {
-  width: 150px;
+  width: 210px;
 }
 </style>

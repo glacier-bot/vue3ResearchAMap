@@ -36,13 +36,18 @@ class OverlayWithRemarks {
   #delInArray: any
   // 鼠标悬停时
   #mouseOverText: any
+  // 是否到达
+  state: any
+  distance: any
+  #updateArr: any
 
   constructor(
     map: any,
     overlay: any,
     polygonAttrDialog: any,
     setPolygonAttrName: any,
-    delInArray: any
+    delInArray: any,
+    updateArr: any
   ) {
     this.#map = map
     this.overlay = overlay
@@ -60,6 +65,7 @@ class OverlayWithRemarks {
       draggable: false
     })
     this.#delInArray = delInArray
+    this.#updateArr = updateArr
     this.#runMain()
   }
 
@@ -232,6 +238,7 @@ class OverlayWithRemarks {
     this.#contextMenu.addItem('删除覆盖物', () => {
       this.destructor()
       this.#contextMenu.close()
+      this.#updateArr()
     })
     this.#contextMenu.on('open', () => {
       // console.log('open context menu')
@@ -270,12 +277,14 @@ class OverlayWithRemarks {
         strokeColor: attrs.fillColor,
         strokeOpacity: attrs.opacity
       })
+      this.#updateArr()
       return
     }
     this.overlay.obj.setOptions({
       fillOpacity: attrs.opacity,
       fillColor: attrs.fillColor
     })
+    this.#updateArr()
   }
 
   #setMouseOverText = () => {

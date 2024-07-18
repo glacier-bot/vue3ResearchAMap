@@ -33,6 +33,7 @@ declare global {
 
 const emit = defineEmits({
   'onDistanceTrigger': (payload: any) => payload,
+  'onOverlayDataEmit': (payload: any) => payload,
 })
 
 const props = defineProps(['newLng', 'newLat', 'drawStatus', 'selectTime']) //{ newLng: String, newLat: String }
@@ -103,6 +104,8 @@ const handleClearClick = (e: boolean) => {
     // console.log('clear overlay')
     closeMouseTool()
     removeOverlay()
+    updateArr()
+    emit('onOverlayDataEmit', [])
   }
 }
 const handleArrowUp = () => {
@@ -155,12 +158,18 @@ const distanceOverlays = () => {
         //计算两点之间的距离
         const pointDistance = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPosition())
         console.log('pointDistance: ', pointDistance)
-        if (pointDistance <= 100 && pointDistance >= 3) {
+        wrappedOverlay.distance = '直线距离：' + pointDistance.toFixed(2) + ' 米'
+        if (pointDistance > 100) {
+          wrappedOverlay.state = '距离较远'
+        } else if (pointDistance <= 100 && pointDistance >= 3) {
           emit('onDistanceTrigger', {
             triggerType: 'point',
             triggerName: wrappedOverlay.name,
             triggerDistance: pointDistance.toFixed(2),
           })
+          wrappedOverlay.state = '即将到达'
+        } else if (pointDistance < 3) {
+          wrappedOverlay.state = '到达'
         }
         break
       }
@@ -168,12 +177,18 @@ const distanceOverlays = () => {
         //计算点到直线的距离
         const lineDistance = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
         console.log('lineDistance: ', lineDistance)
-        if (lineDistance <= 100 && lineDistance >= 3) {
+        wrappedOverlay.distance = '直线距离：' + lineDistance.toFixed(2) + ' 米'
+        if (lineDistance > 100) {
+          wrappedOverlay.state = '距离较远'
+        } else if (lineDistance <= 100 && lineDistance >= 3) {
           emit('onDistanceTrigger', {
             triggerType: 'polyline',
             triggerName: wrappedOverlay.name,
             triggerDistance: lineDistance.toFixed(2),
           })
+          wrappedOverlay.state = '即将到达'
+        } else if (lineDistance < 3) {
+          wrappedOverlay.state = '到达'
         }
         break
       }
@@ -184,6 +199,7 @@ const distanceOverlays = () => {
         // console.log('toCircleCenter: ', toCircleCenter)
         // console.log('radius: ', overlay.getRadius())
         console.log('pointCircle: ', pointCircle)
+        wrappedOverlay.distance = '距离圆心：' + toCircleCenter.toFixed(2) + ' 米；圆半径：' + wrappedOverlay.overlay.obj.getRadius().toFixed(2) + ' 米'
         if (pointCircle) {
           emit('onDistanceTrigger', {
             triggerType: 'circle',
@@ -191,22 +207,31 @@ const distanceOverlays = () => {
             triggerDistance: toCircleCenter.toFixed(2),
             triggerRadius: wrappedOverlay.overlay.obj.getRadius().toFixed(2),
           })
+          wrappedOverlay.state = '到达'
+        } else {
+          wrappedOverlay.state = '距离较远'
         }
         break
       }
       default: {
         //判断是否在区域内
         const pointRing = AMap.GeometryUtil.isPointInRing(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
+        const pointToLine = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
         console.log('pointRing: ', pointRing)
         if (pointRing) {
           emit('onDistanceTrigger', {
             triggerType: 'ring',
             triggerName: wrappedOverlay.name,
           })
+          wrappedOverlay.state = '到达'
+        } else {
+          wrappedOverlay.state = '距离较远'
+          wrappedOverlay.distance = '直线距离：' + pointToLine.toFixed(2) + ' 米'
         }
         break
       }
     }
+    updateArr()
   })
 }
 const handlePolygonAttrDialogClick = (e: string) => {
@@ -218,6 +243,14 @@ const delInArray = (id: any) => {
   let index = arrOverlayWithRemarks.findIndex(item => item.id === id)
   if (index !== -1) {
     arrOverlayWithRemarks.splice(index, 1)
+  }
+}
+const updateArr = () => {
+  // console.log('arr: ', arrOverlayWithRemarks.length)
+  if (arrOverlayWithRemarks) {
+    emit('onOverlayDataEmit', arrOverlayWithRemarks)
+  } else {
+    emit('onOverlayDataEmit', [])
   }
 }
 watch(
@@ -279,7 +312,6 @@ watch(
     })
   }
 )
-
 // const handleMapClick = () => {
 //   // [121.269525, 31.343713] //正确位置
 //   // [121.104609, 31.138115] //错误位置
@@ -361,8 +393,9 @@ onMounted(() => {
     // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
     const changeLastOverlay = () => {
       const lastOverlay = overlays[overlays.length - 1]
-      const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay, handlePolygonAttrDialog, setPolygonAttrName, delInArray)
+      const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay, handlePolygonAttrDialog, setPolygonAttrName, delInArray, updateArr)
       arrOverlayWithRemarks.push(overlayWithRemarks)
+      emit('onOverlayDataEmit', arrOverlayWithRemarks)
     }
     const draw = (e: string) => {
       switch (e) {
