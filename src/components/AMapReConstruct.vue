@@ -8,7 +8,7 @@ import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 import OverlayWithRemarks from './classes/OverlayWithRemarks'
 import PropertyBoxPolygon from './dialogs/PropertyBoxPolygon.vue'
 
-// 功能：1.自定义覆盖物的属性，2.在页面下方显示状态栏，动态更新定位点与覆盖物之间的关系
+// 功能：1.定位点的轨迹追踪和显示
 
 declare global {
   interface Window {
