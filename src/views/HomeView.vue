@@ -141,9 +141,8 @@ const handleOverlayDataEmit = (payload: any) => {
         <!-- <CollapseItem class="collapse" /> -->
         <DrawerManager :model-value="manageSelect" :overlay-data="overlayData" />
         <div class="notification" />
-        <AMap :new-lng="`${longtitute}`" :new-lat="`${latitute}`" :draw-status="`${drawStatus}`"
-          :selectTime="`${selectTimestamp}`" @on-distance-trigger="handleDistanceTrigger"
-          @on-overlay-data-emit="handleOverlayDataEmit" />
+        <AMap :draw-status="`${drawStatus}`" :selectTime="`${selectTimestamp}`"
+          @on-distance-trigger="handleDistanceTrigger" @on-overlay-data-emit="handleOverlayDataEmit" />
       </el-main>
     </el-container>
   </el-container>

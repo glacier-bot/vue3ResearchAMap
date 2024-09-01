@@ -40,6 +40,9 @@ class OverlayWithRemarks {
   state: any
   distance: any
   #updateArr: any
+  // 附加属性
+  tag: any
+  zIndex: any
 
   constructor(
     map: any,

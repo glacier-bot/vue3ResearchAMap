@@ -8,7 +8,7 @@ import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 import OverlayWithRemarks from './classes/OverlayWithRemarks'
 import PropertyBoxPolygon from './dialogs/PropertyBoxPolygon.vue'
 
-// 功能：1.定位点的轨迹追踪和显示
+// 功能：1.定位点的轨迹追踪和显示；2.多选查找结果或者选择一个结果可以直接缩放到对应位置
 
 declare global {
   interface Window {
@@ -31,27 +31,20 @@ declare global {
   }
 }
 
+const props = defineProps(['drawStatus', 'selectTime'])
+
 const emit = defineEmits({
   'onDistanceTrigger': (payload: any) => payload,
   'onOverlayDataEmit': (payload: any) => payload,
 })
 
-const props = defineProps(['newLng', 'newLat', 'drawStatus', 'selectTime']) //{ newLng: String, newLat: String }
 let overlays: any[] = []
 const ifEdit = ref(false)
-const optLocation = ref<[number, number]>([0, 0])
 let arrOverlayWithRemarks: any[] = []
-const ifFirstLocation = ref(true)
-const startLng = ref(0)
-const startLat = ref(0)
-const endLng = ref(0)
-const endLat = ref(0)
 const deltaLat = ref(0)
 const deltaLng = ref(0)
-// const locationMarker = new window.AMap.Marker({})
 
 let map: AMap.Map | null = null
-let locationMarker: AMap.Marker | null = null;
 
 const polygonAttrDialog = ref(false)
 const handlePolygonAttrDialog = () => {
@@ -111,43 +104,44 @@ const handleClearClick = (e: boolean) => {
 const handleArrowUp = () => {
   console.log('up')
   // optLocation.value = [optLocation.value[0], optLocation.value[1] + 0.0001]
-  if (!locationMarker) return
-  const lnglat = locationMarker.getPosition()
-  if (!lnglat) return
-  optLocation.value = [lnglat.lng, lnglat.lat + 0.0001]
-  locationMarker?.setPosition(optLocation.value)
-  distanceOverlays()
+  // if (!locationMarker) return
+  // const lnglat = locationMarker.getPosition()
+  // if (!lnglat) return
+  // optLocation.value = [lnglat.lng, lnglat.lat + 0.0001]
+  // locationMarker?.setPosition(optLocation.value)
+  // distanceOverlays()
 }
 const handleArrowDown = () => {
   console.log('down')
   // optLocation.value = [optLocation.value[0], optLocation.value[1] - 0.0001]
-  if (!locationMarker) return
-  const lnglat = locationMarker.getPosition()
-  if (!lnglat) return
-  optLocation.value = [lnglat.lng, lnglat.lat - 0.0001]
-  locationMarker?.setPosition(optLocation.value)
-  distanceOverlays()
+  // if (!locationMarker) return
+  // const lnglat = locationMarker.getPosition()
+  // if (!lnglat) return
+  // optLocation.value = [lnglat.lng, lnglat.lat - 0.0001]
+  // locationMarker?.setPosition(optLocation.value)
+  // distanceOverlays()
 }
 const handleArrowLeft = () => {
   console.log('left')
   // optLocation.value = [optLocation.value[0] - 0.0001, optLocation.value[1]]
-  if (!locationMarker) return
-  const lnglat = locationMarker.getPosition()
-  if (!lnglat) return
-  optLocation.value = [lnglat.lng - 0.0001, lnglat.lat]
-  locationMarker?.setPosition(optLocation.value)
-  distanceOverlays()
+  // if (!locationMarker) return
+  // const lnglat = locationMarker.getPosition()
+  // if (!lnglat) return
+  // optLocation.value = [lnglat.lng - 0.0001, lnglat.lat]
+  // locationMarker?.setPosition(optLocation.value)
+  // distanceOverlays()
 }
 const handleArrowRight = () => {
   console.log('right')
   // optLocation.value = [optLocation.value[0] + 0.0001, optLocation.value[1]]
-  if (!locationMarker) return
-  const lnglat = locationMarker.getPosition()
-  if (!lnglat) return
-  optLocation.value = [lnglat.lng + 0.0001, lnglat.lat]
-  locationMarker?.setPosition(optLocation.value)
-  distanceOverlays()
+  // if (!locationMarker) return
+  // const lnglat = locationMarker.getPosition()
+  // if (!lnglat) return
+  // optLocation.value = [lnglat.lng + 0.0001, lnglat.lat]
+  // locationMarker?.setPosition(optLocation.value)
+  // distanceOverlays()
 }
+/*
 const distanceOverlays = () => {
   // console.log('distance overlays: ', overlays.value)
   if (!arrOverlayWithRemarks) return
@@ -234,6 +228,7 @@ const distanceOverlays = () => {
     updateArr()
   })
 }
+*/
 const handlePolygonAttrDialogClick = (e: string) => {
   if (e === 'click') {
     polygonAttrDialog.value = false
@@ -259,10 +254,6 @@ watch(
     if (!newVal) return
     // ifEdit.value = newVal.drawStatus === 'selected' ? true : false
     switch (newVal.drawStatus) {
-      case 'location': {
-        ifEdit.value = false
-        break
-      }
       case 'selected': {
         // ifEdit.value = true
         if (newVal.selectTime) {
@@ -278,65 +269,9 @@ watch(
       }
     }
     // console.log('ifEdit: ', ifEdit.value)
-    if (newVal.newLng * newVal.newLat === 0) return
-    const newLocation = [parseFloat(newVal.newLng), parseFloat(newVal.newLat)]
-    if (newVal.drawStatus !== "location") return
-
-    AMap.convertFrom(newLocation, 'gps', (status: string, result: { info: string, locations: Array<{ lng: number, lat: number }> }) => {
-      if (status === 'complete') {
-        if (result.info === 'ok') {
-          // const deltaLat = 0//31.343713 - 31.138115  新值减旧值
-          // const deltaLng = 0//121.269525 - 121.104609 新值减旧值
-          optLocation.value = [result.locations[0].lng + deltaLng.value, result.locations[0].lat + deltaLat.value]
-          map?.panTo(optLocation.value)
-          map?.setZoom(16)
-          locationMarker?.setPosition(optLocation.value)
-          locationMarker?.setIcon(new AMap.Icon({
-            image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png',
-            imageSize: new AMap.Size(30, 40),
-          }))
-          // const aContextMenu = new AMap.ContextMenu()
-          // aContextMenu.addItem('删除定位点', () => {
-          //   console.log('删除定位点')
-          // }, 0)
-          // locationMarker?.on('rightclick', (e) => {
-          //   if (!map) return
-          //   aContextMenu.open(map, e.lnglat)
-          // })
-          if (!locationMarker) { return }
-          map?.add(
-            locationMarker
-          )
-        }
-      }
-    })
   }
 )
-// const handleMapClick = () => {
-//   // [121.269525, 31.343713] //正确位置
-//   // [121.104609, 31.138115] //错误位置
-//   AMap.convertFrom([props.newLng, props.newLat], 'gps', (status: string, result: { info: string, locations: Array<{ lng: number, lat: number }> }) => {
-//     // console.log('status: ', status)
-//     if (status === 'complete') {
-//       // console.log(result)
-//       if (result.info === 'ok') {
-//         const deltaLat = 31.343713 - 31.138115
-//         const deltaLng = 121.269525 - 121.104609
-//         const optLocation: [number, number] = [result.locations[0].lng + deltaLng, result.locations[0].lat + deltaLat]
-//         // console.log(result.locations[0].pos[0] / 100000)
-//         // console.log([result.locations[0].lng, result.locations[0].lat])
-//         map?.panTo(optLocation)
-//         // map?.panTo([121.269525, 31.343713])
-//         // convertLngLat = [result.locations[0].lng, result.locations[0].lat]
-//         map?.add(
-//           new AMap.Marker({ position: optLocation })
-//         )
-//       }
-//     } else {
-//       console.log('error status: ', status)
-//     }
-//   })
-// }
+
 onMounted(() => {
   // console.log('运行加载')
   deltaLat.value = 0
@@ -347,7 +282,7 @@ onMounted(() => {
   AMapLoader.load({
     key: 'aec583ffb42668304d01746bc91fe09f',
     version: '2.0',
-    plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool', 'AMap.PolyEditor', 'AMap.RectangleEditor', 'AMap.CircleEditor'],
+    plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool', 'AMap.PolyEditor', 'AMap.RectangleEditor', 'AMap.CircleEditor', 'AMap.Geolocation'],
   }).then((AMap) => {
     map = new AMap.Map('container', {
       viewMode: '2D',
@@ -359,38 +294,27 @@ onMounted(() => {
     const scale = new AMap.Scale()
     const maptype = new AMap.MapType()
     const mouseTool = new AMap.MouseTool(map)
+    const geolocation = new AMap.Geolocation({
+      enableHighAccuracy: true,
+      timeout: 5000,
+      zoomToAccuracy: true,
+      offset: [19, 90]
+    })
 
-    locationMarker = new AMap.Marker({
-      position: optLocation.value,
-      // icon: new AMap.Icon({
-      //   image: '../public/map-158493_1280.png',
-      //   imageSize: new AMap.Size(18, 28),
-      // }),
-      draggable: true
-    })
-    locationMarker?.on('dragstart', () => {
-      if (ifFirstLocation.value) {
-        // console.log('dragstart e: ',e.lnglat.lat)
-        startLng.value = props.newLng//e.lnglat.lng
-        startLat.value = props.newLat//e.lnglat.lat
-        ifFirstLocation.value = false
-      }
-    })
-    locationMarker?.on('dragend', (e: any) => {
-      // console.log('dragend e: ',e)
-      endLng.value = e.lnglat.lng
-      endLat.value = e.lnglat.lat
-      deltaLng.value = endLng.value - startLng.value
-      deltaLat.value = endLat.value - startLat.value
-      console.log('deltaLng: ', deltaLng.value)
-      console.log('deltaLat: ', deltaLat.value)
-    })
-    locationMarker?.on('rightclick', () => {
-      locationMarker?.setDraggable(false)
-    })
-    // const aContextMenu = new AMap.ContextMenu()
-    // aContextMenu.addItem('删除覆盖物', () => { (window as any).myOverlayTools.removeOverlay() }, 0)
-    // const geolocation = new AMap.Geolocation({ convert: false, GeoLocationFirst: true, enableHighAccuracy: true })
+    // const refreshGeolocationFrequently = () => {
+    //   let count = 0
+    //   //每隔3秒刷新一次定位
+    //   const id = setInterval(() => {
+    //     geolocation.getCurrentPosition()
+    //     console.log('refresh geolocation')
+    //     count++
+    //     if (count === 3) {
+    //       clearInterval(id)
+    //     }
+    //   }, 2000)
+    // }
+    // refreshGeolocationFrequently()
+
     const changeLastOverlay = () => {
       const lastOverlay = overlays[overlays.length - 1]
       const overlayWithRemarks = new OverlayWithRemarks(map, lastOverlay, handlePolygonAttrDialog, setPolygonAttrName, delInArray, updateArr)
@@ -467,7 +391,7 @@ onMounted(() => {
     map?.addControl(toolBar)
     map?.addControl(scale)
     map?.addControl(maptype)
-    // map?.addControl(geolocation)
+    map?.addControl(geolocation)
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
     mouseTool.on('draw', (e: mouseDrawEventCallbck) => {
       overlays.push(e)
@@ -538,41 +462,3 @@ onUnmounted(() => {
   background-color: aliceblue;
 }
 </style>
-// const drawtest = (e: MouseEvent) => {
-// const target = e.target as HTMLElement
-// console.log('click draw: ', target.classList)
-// switch (true) {
-// case target.classList.contains('marker'): {
-// console.log('draw marker')
-// mouseTool.marker()
-// break
-// }
-// case target.classList.contains('polyline'): {
-// mouseTool.polyline({
-// strokeColor: '#80d8ff'
-// })
-// break
-// }
-// case target.classList.contains('polygon'): {
-// mouseTool.polygon({
-// fillColor: '#00b0ff',
-// strokeColor: '#80d8ff'
-// });
-// break;
-// }
-// case target.classList.contains('rectangle'): {
-// mouseTool.rectangle({
-// fillColor: '#00b0ff',
-// strokeColor: '#80d8ff'
-// });
-// break;
-// }
-// case target.classList.contains('circle'): {
-// mouseTool.circle({
-// fillColor: '#00b0ff',
-// strokeColor: '#80d8ff'
-// });
-// break;
-// }
-// }
-// }
