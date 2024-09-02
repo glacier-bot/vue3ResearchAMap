@@ -2,13 +2,14 @@
 import { onMounted, onUnmounted, watch, ref } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 import '@amap/amap-jsapi-types'
-// import { Plus } from '@element-plus/icons-vue'
+import { Aim } from '@element-plus/icons-vue'
+// import { ElMessage } from 'element-plus'
 import SwitchButtons from './buttons/SwitchButtons.vue'
 import ArrowButtons from '../components/buttons/ArrowButtons.vue'
 import OverlayWithRemarks from './classes/OverlayWithRemarks'
 import PropertyBoxPolygon from './dialogs/PropertyBoxPolygon.vue'
 
-// 功能：1.定位点的轨迹追踪和显示；2.多选查找结果或者选择一个结果可以直接缩放到对应位置
+// 功能：1.定位点的轨迹追踪和显示；2.多选查找结果或者选择一个结果可以直接缩放到对应位置；3.使用方向键控制定位成功后返回的定位点（优先解决）
 
 declare global {
   interface Window {
@@ -40,6 +41,11 @@ const emit = defineEmits({
 
 let overlays: any[] = []
 const ifEdit = ref(false)
+const triggerLocation = ref(false)
+const triggerType = ref('primary')
+const refreshId = ref(0)
+const buttonRef = ref()
+const popoverRef = ref()
 let arrOverlayWithRemarks: any[] = []
 const deltaLat = ref(0)
 const deltaLng = ref(0)
@@ -86,7 +92,18 @@ const Ddraw = (e: string) => { (window as any).myMapTools.draw(e) }
 const DcloseMouseTool = () => { (window as any).myMapTools.closeMouseTool(false) }
 const removeOverlay = () => { (window as any).myMapTools.removeOverlay() }
 const closeMouseTool = () => { (window as any).myMapTools.closeMouseTool(true) }
+const refreshGeolocationFrequently = () => { return (window as any).myMapTools.refreshGeolocationFrequently() }
 
+const handleRealtimeLocationClick = () => {
+  triggerLocation.value = !triggerLocation.value
+  if (triggerLocation.value) {
+    triggerType.value = 'danger'
+    refreshId.value = refreshGeolocationFrequently()
+  } else {
+    triggerType.value = 'primary'
+    clearInterval(refreshId.value)
+  }
+}
 const handleSwitchChange = (e: { name: string, status: boolean }) => {
   // console.log('switch changed: ', e)
   DcloseMouseTool()
@@ -301,19 +318,20 @@ onMounted(() => {
       offset: [19, 90]
     })
 
-    // const refreshGeolocationFrequently = () => {
-    //   let count = 0
-    //   //每隔3秒刷新一次定位
-    //   const id = setInterval(() => {
-    //     geolocation.getCurrentPosition()
-    //     console.log('refresh geolocation')
-    //     count++
-    //     if (count === 3) {
-    //       clearInterval(id)
-    //     }
-    //   }, 2000)
-    // }
-    // refreshGeolocationFrequently()
+    const refreshGeolocationFrequently = () => {
+      let count = 0
+      //每隔2秒刷新一次定位
+      const id = setInterval(() => {
+        console.log('refresh geolocation: ', count)
+        geolocation.getCurrentPosition()
+        // console.log('refresh geolocation')
+        count++
+        if (count === 10) {
+          clearInterval(id)
+        }
+      }, 1500)
+      return id
+    }
 
     const changeLastOverlay = () => {
       const lastOverlay = overlays[overlays.length - 1]
@@ -387,6 +405,7 @@ onMounted(() => {
       draw: draw,
       closeMouseTool: closeMouseTool,
       removeOverlay: removeOverlay,
+      refreshGeolocationFrequently: refreshGeolocationFrequently,
     }
     map?.addControl(toolBar)
     map?.addControl(scale)
@@ -406,6 +425,16 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div class="realtime-location-button">
+    <el-tooltip effect="dark" content="实时定位" placement="top-start">
+      <el-button ref="buttonRef" :type="triggerType" :icon="Aim" circle @click="handleRealtimeLocationClick" />
+    </el-tooltip>
+  </div>
+  <el-popover ref="popoverRef" :virtual-ref="buttonRef" trigger="click" title="提示：" :auto-close=1500
+    placement="top-start" virtual-triggering>
+    <span v-show="triggerLocation">开始实时定位</span>
+    <span v-show="!triggerLocation">停止实时定位</span>
+  </el-popover>
   <div class="polygon-property-box" v-show="polygonAttrDialog">
     <PropertyBoxPolygon :if-show="polygonAttrDialog" :recive-name="polygonAttrs.name"
       :recive-remarks="polygonAttrs.remarks" :recive-if-fill-color="polygonAttrs.ifFillColor"
@@ -413,7 +442,7 @@ onUnmounted(() => {
       :recive-opacity="polygonAttrs.opacity" @handle-check-or-cancel-click="handlePolygonAttrDialogClick"
       @polygon-attrs="handlePolygonAttrs" />
   </div>
-  <div class="arrow">
+  <div class="arrow" v-show="false">
     <ArrowButtons @on-arrow-up="handleArrowUp" @on-arrow-down="handleArrowDown" @on-arrow-left="handleArrowLeft"
       @on-arrow-right="handleArrowRight" />
   </div>
@@ -460,5 +489,11 @@ onUnmounted(() => {
   top: 20px;
   z-index: 2;
   background-color: aliceblue;
+}
+
+.realtime-location-button {
+  position: absolute;
+  bottom: 173px;
+  right: 221px;
 }
 </style>

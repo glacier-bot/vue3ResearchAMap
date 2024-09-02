@@ -8,19 +8,13 @@ import { ElNotification } from 'element-plus'
 import { Location, SemiSelect, CircleCheck, Compass } from '@element-plus/icons-vue'
 // import CollapseItem from '@/components/CollapseItem.vue';
 
-const latitute = ref(0)
-const longtitute = ref(0)
 const drawStatus = ref('')
 // const testNum = ref(0)
 const selectTimestamp = ref('')
 const manageSelect = ref('')
 const overlayData = ref<any[]>([])
+const menuWidth = ref('64px')
 
-const handleValueChanged = (payload: { latitute: number, longtitute: number }) => {
-  // console.log('payload:', payload)
-  latitute.value = payload.latitute
-  longtitute.value = payload.longtitute
-}
 const handleDrawSelected = (payload: string) => {
   // console.log('select: ', payload)
   drawStatus.value = payload
@@ -127,14 +121,17 @@ const handleOverlayDataEmit = (payload: any) => {
   })
   overlayData.value = arr
 }
+const handleWidthChange = (payload: string) => {
+  menuWidth.value = payload
+}
 </script>
 
 <template>
   <el-container class="outter-main">
-    <el-aside width="210px">
-      <Aside @on-value-changed="handleValueChanged" @on-draw-selected="handleDrawSelected"
-        @on-notification="handleNotification" @on-select-timestamp="handleSelectTimestamp"
-        @on-manage-selected="handleManageSelect" />
+    <el-aside :width="menuWidth">
+      <Aside @on-draw-selected="handleDrawSelected" @on-notification="handleNotification"
+        @on-select-timestamp="handleSelectTimestamp" @on-manage-selected="handleManageSelect"
+        @on-width-change="handleWidthChange" />
     </el-aside>
     <el-container class="main">
       <el-main>
