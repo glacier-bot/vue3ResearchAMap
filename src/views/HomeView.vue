@@ -127,9 +127,9 @@ const handleWidthChange = (payload: string) => {
 </script>
 
 <template>
-  <el-container class="outter-main">
+  <el-container class="outter-main" style="height:100vh;">
     <el-aside :width="menuWidth">
-      <Aside @on-draw-selected="handleDrawSelected" @on-notification="handleNotification"
+      <Aside style="height:100%;" @on-draw-selected="handleDrawSelected" @on-notification="handleNotification"
         @on-select-timestamp="handleSelectTimestamp" @on-manage-selected="handleManageSelect"
         @on-width-change="handleWidthChange" />
     </el-aside>
