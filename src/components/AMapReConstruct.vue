@@ -32,7 +32,7 @@ declare global {
   }
 }
 
-const props = defineProps(['drawStatus', 'selectTime'])
+const props = defineProps(['drawStatus', 'selectTime', 'menuWidth'])
 
 const emit = defineEmits({
   'onDistanceTrigger': (payload: any) => payload,
@@ -49,8 +49,12 @@ const popoverRef = ref()
 let arrOverlayWithRemarks: any[] = []
 const deltaLat = ref(0)
 const deltaLng = ref(0)
+const menuWidthVal = ref('300px')
+// const radioRef = ref()
 
 let map: AMap.Map | null = null
+let currentLocation = ref<AMap.LngLat | null>(null)
+
 
 const polygonAttrDialog = ref(false)
 const handlePolygonAttrDialog = () => {
@@ -158,7 +162,7 @@ const handleArrowRight = () => {
   // locationMarker?.setPosition(optLocation.value)
   // distanceOverlays()
 }
-/*
+
 const distanceOverlays = () => {
   // console.log('distance overlays: ', overlays.value)
   if (!arrOverlayWithRemarks) return
@@ -167,7 +171,7 @@ const distanceOverlays = () => {
     switch (wrappedOverlay.overlay.obj.CLASS_NAME) {
       case 'AMap.Marker': {
         //计算两点之间的距离
-        const pointDistance = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPosition())
+        const pointDistance = AMap.GeometryUtil.distance(currentLocation.value as any, wrappedOverlay.overlay.obj.getPosition())
         console.log('pointDistance: ', pointDistance)
         wrappedOverlay.distance = '直线距离：' + pointDistance.toFixed(2) + ' 米'
         if (pointDistance > 100) {
@@ -186,7 +190,7 @@ const distanceOverlays = () => {
       }
       case 'Overlay.Polyline': {
         //计算点到直线的距离
-        const lineDistance = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
+        const lineDistance = AMap.GeometryUtil.distanceToLine(currentLocation.value as any, wrappedOverlay.overlay.obj.getPath())
         console.log('lineDistance: ', lineDistance)
         wrappedOverlay.distance = '直线距离：' + lineDistance.toFixed(2) + ' 米'
         if (lineDistance > 100) {
@@ -205,7 +209,7 @@ const distanceOverlays = () => {
       }
       case 'Overlay.Circle': {
         //计算点到圆心的距离与圆半径的关系
-        const toCircleCenter = AMap.GeometryUtil.distance(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getCenter())
+        const toCircleCenter = AMap.GeometryUtil.distance(currentLocation.value as any, wrappedOverlay.overlay.obj.getCenter())
         const pointCircle = toCircleCenter - wrappedOverlay.overlay.obj.getRadius() <= 0 ? true : false
         // console.log('toCircleCenter: ', toCircleCenter)
         // console.log('radius: ', overlay.getRadius())
@@ -226,8 +230,8 @@ const distanceOverlays = () => {
       }
       default: {
         //判断是否在区域内
-        const pointRing = AMap.GeometryUtil.isPointInRing(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
-        const pointToLine = AMap.GeometryUtil.distanceToLine(locationMarker?.getPosition() as any, wrappedOverlay.overlay.obj.getPath())
+        const pointRing = AMap.GeometryUtil.isPointInRing(currentLocation.value as any, wrappedOverlay.overlay.obj.getPath())
+        const pointToLine = AMap.GeometryUtil.distanceToLine(currentLocation.value as any, wrappedOverlay.overlay.obj.getPath())
         console.log('pointRing: ', pointRing)
         if (pointRing) {
           emit('onDistanceTrigger', {
@@ -245,7 +249,7 @@ const distanceOverlays = () => {
     updateArr()
   })
 }
-*/
+
 const handlePolygonAttrDialogClick = (e: string) => {
   if (e === 'click') {
     polygonAttrDialog.value = false
@@ -267,25 +271,36 @@ const updateArr = () => {
 }
 watch(
   props, (newVal) => {
-    //   console.log('newVal: ', newVal)
+    console.log('newVal: ', newVal.drawStatus)
     if (!newVal) return
+    // console.log('menuWidth: ', newVal.menuWidth)
+    menuWidthVal.value = newVal.menuWidth
+    ifEdit.value = newVal.drawStatus === 'edit' ? true : false
+    // radioRef.value.style.left = newVal.menuWidth
+    // document.documentElement.style.setProperty('--menu-width', newVal.menuWidth)
     // ifEdit.value = newVal.drawStatus === 'selected' ? true : false
-    switch (newVal.drawStatus) {
-      case 'selected': {
-        // ifEdit.value = true
-        if (newVal.selectTime) {
-          // console.log('selectTime: ', newVal.selectTime)
-          ifEdit.value = !ifEdit.value
-          // console.log('ifEdit: ', ifEdit.value)
-        }
-        break
-      }
-      case 'settings': {
-        ifEdit.value = false
-        break
-      }
-    }
-    // console.log('ifEdit: ', ifEdit.value)
+    //   switch (newVal.drawStatus) {
+    //     case 'selectedDraw': {
+    //       // ifEdit.value = true
+    //       ifEdit.value = !ifEdit.value
+    //       // if (newVal.selectTime) {
+    //       //   // console.log('selectTime: ', newVal.selectTime)
+    //       //   ifEdit.value = !ifEdit.value
+    //       //   console.log('ifEdit: ', ifEdit.value)
+    //       // }
+    //       console.log('ifEdit: ', ifEdit.value)
+    //       break
+    //     }
+    //     case 'settings': {
+    //       // ifEdit.value = false
+    //       break
+    //     }
+    //     case 'switch': {
+    //       // ifEdit.value = !ifEdit.value
+    //       break
+    //     }
+    //   }
+    //   // console.log('ifEdit: ', ifEdit.value)
   }
 )
 
@@ -293,6 +308,7 @@ onMounted(() => {
   // console.log('运行加载')
   deltaLat.value = 0
   deltaLng.value = 0
+  // document.documentElement.style.setProperty('--menu-width', menuWidthVal.value)
   window._AMapSecurityConfig = {
     securityJsCode: "db0fece5e68ddfcb041edbc7c6a454f5",
   };
@@ -323,7 +339,14 @@ onMounted(() => {
       //每隔2秒刷新一次定位
       const id = setInterval(() => {
         console.log('refresh geolocation: ', count)
-        geolocation.getCurrentPosition()
+        geolocation.getCurrentPosition((status: string, result: any) => {
+          if (status === 'complete') {
+            currentLocation.value = result.position
+            distanceOverlays()
+          } else if (status === 'error') {
+            console.log('error: ', result)
+          }
+        })
         // console.log('refresh geolocation')
         count++
         if (count === 10) {
@@ -412,7 +435,7 @@ onMounted(() => {
     map?.addControl(maptype)
     map?.addControl(geolocation)
     // map?.add(new AMap.Marker({ position: [116.397428, 39.90923] }))
-    mouseTool.on('draw', (e: mouseDrawEventCallbck) => {
+    mouseTool.on('draw', (e: any) => {
       overlays.push(e)
       // console.log(overlays.value.length)
       changeLastOverlay()
@@ -446,7 +469,7 @@ onUnmounted(() => {
     <ArrowButtons @on-arrow-up="handleArrowUp" @on-arrow-down="handleArrowDown" @on-arrow-left="handleArrowLeft"
       @on-arrow-right="handleArrowRight" />
   </div>
-  <div v-show="ifEdit" class="radio">
+  <div v-show="ifEdit" class="radio" :style="{ left: `${parseInt(menuWidthVal.replace('px', '')) + 50}` + 'px' }">
     <!-- <el-button class="marker" type="primary" @click="Ddraw">绘制点</el-button> -->
     <SwitchButtons @on-switch-changed="handleSwitchChange" @on-clear-click="handleClearClick" />
   </div>
@@ -473,8 +496,8 @@ onUnmounted(() => {
 .radio {
   // display: none;
   position: absolute;
-  top: 50px;
-  left: 170px;
+  top: 5vh;
+  // left: var(--menu-width);
   z-index: 1;
 }
 

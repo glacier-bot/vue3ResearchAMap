@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { Setting, Edit, Guide, Switch } from '@element-plus/icons-vue'
 
+let draw = false
+
 const emit = defineEmits({
   'onDrawSelected': (payload: string) => payload,
   'onNotification': (payload: string) => payload,
@@ -10,34 +12,45 @@ const emit = defineEmits({
   'onWidthChange': (payload: string) => payload
 })
 const isCollapse = ref(true)
-const handleSelect = (key: string) => {
-  // console.log('key:', key)
-  switch (key) {
-    case '1': {
-      break
-    }
-    case '2': {
-      emit('onDrawSelected', 'selected')
-      emit('onSelectTimestamp', new Date().valueOf().toString())
-      // console.log('Selected')
-      break
-    }
-    case '3': {
-      break
-    }
-    case '4': {
-      emit('onManageSelected', 'manage')
-      break
-    }
-    case '9': {
-      // console.log('Setting')
-      // alert('Setting')
-      emit('onDrawSelected', 'settings')
-      emit('onNotification', 'Setting')
-      break
-    }
-  }
+const handle2Click = () => {
+  draw = !draw
+  emit('onDrawSelected', draw ? 'edit' : 'noEdit')
+  emit('onSelectTimestamp', new Date().valueOf().toString())
 }
+// const handleSelect = (key: string) => {
+//   // console.log('key:', key)
+//   switch (key) {
+//     case '1': {
+//       break
+//     }
+//     case '2': {
+//       emit('onDrawSelected', 'selectedDraw')
+//       emit('onSelectTimestamp', new Date().valueOf().toString())
+//       // console.log('Selected')
+//       break
+//     }
+//     case '3': {
+//       break
+//     }
+//     case '4': {
+//       emit('onManageSelected', 'manage')
+//       break
+//     }
+//     case '9': {
+//       // console.log('Setting')
+//       // alert('Setting')
+//       emit('onDrawSelected', 'settings')
+//       emit('onNotification', 'Setting')
+//       break
+//     }
+//     case '10': {
+//       // console.log('Switch')
+//       emit('onDrawSelected', 'switch')
+//       // alert('Switch')
+//       break
+//     }
+//   }
+// }
 
 const handleHideShowClick = () => {
   isCollapse.value = !isCollapse.value
@@ -51,8 +64,8 @@ const handleHideShowClick = () => {
 </script>
 
 <template>
-  <el-menu :collapse="isCollapse" :collapse-transition="false" @select="handleSelect">
-    <el-menu-item index="2">
+  <el-menu :collapse="isCollapse" :collapse-transition="false">
+    <el-menu-item index="2" @click="handle2Click">
       <el-icon>
         <Edit />
       </el-icon>
