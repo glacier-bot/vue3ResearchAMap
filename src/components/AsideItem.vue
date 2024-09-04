@@ -17,6 +17,13 @@ const handle2Click = () => {
   emit('onDrawSelected', draw ? 'edit' : 'noEdit')
   emit('onSelectTimestamp', new Date().valueOf().toString())
 }
+const handle4Click = () => {
+  emit('onManageSelected', 'manage')
+}
+const handle9Click = () => {
+  emit('onDrawSelected', 'settings')
+  emit('onNotification', 'Setting')
+}
 // const handleSelect = (key: string) => {
 //   // console.log('key:', key)
 //   switch (key) {
@@ -71,13 +78,13 @@ const handleHideShowClick = () => {
       </el-icon>
       <template #title>创建覆盖物</template>
     </el-menu-item>
-    <el-menu-item index="4">
+    <el-menu-item index="4" @click="handle4Click">
       <el-icon>
         <Guide />
       </el-icon>
       <template #title>覆盖物与到达提示管理</template>
     </el-menu-item>
-    <el-menu-item index="9">
+    <el-menu-item index="9" @click="handle9Click">
       <el-icon>
         <Setting />
       </el-icon>
