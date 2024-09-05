@@ -21,8 +21,8 @@ const handle4Click = () => {
   emit('onManageSelected', 'manage')
 }
 const handle9Click = () => {
-  emit('onDrawSelected', 'settings')
-  emit('onNotification', 'Setting')
+  // emit('onDrawSelected', 'settings')
+  // emit('onNotification', 'Setting')
 }
 // const handleSelect = (key: string) => {
 //   // console.log('key:', key)

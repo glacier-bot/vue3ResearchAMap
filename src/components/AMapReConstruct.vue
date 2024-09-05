@@ -310,10 +310,10 @@ onMounted(() => {
   deltaLng.value = 0
   // document.documentElement.style.setProperty('--menu-width', menuWidthVal.value)
   window._AMapSecurityConfig = {
-    securityJsCode: "这里填自己申请的code",
+    securityJsCode: "db0fece5e68ddfcb041edbc7c6a454f5",
   };
   AMapLoader.load({
-    key: '这里填自己申请的key',
+    key: 'aec583ffb42668304d01746bc91fe09f',
     version: '2.0',
     plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.MapType', 'AMap.MouseTool', 'AMap.PolyEditor', 'AMap.RectangleEditor', 'AMap.CircleEditor', 'AMap.Geolocation'],
   }).then((AMap) => {
