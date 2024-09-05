@@ -1,7 +1,12 @@
 # vue3ResearchAMap
 
-基于vue3的调研地图网页
+基于vue3和高德地图的开源出行辅助app
+
 食用前要在高德官方申请key，不要一上来就运行
+
+项目发布在orecanvas.com，欢迎来测～
+
+项目刚刚起步，请大家多提意见和建议，每条我都会看的
 
 # vue-project
 
