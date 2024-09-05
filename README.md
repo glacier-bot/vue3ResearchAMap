@@ -1,5 +1,7 @@
 # vue3ResearchAMap
+
 基于vue3的调研地图网页
+食用前要在高德官方申请key，不要一上来就运行
 
 # vue-project
 

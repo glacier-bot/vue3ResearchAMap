@@ -69,10 +69,10 @@ const handleClick = () => {
   <el-row class="switch-text" :gutter="16">
     <el-col>
       <el-text size="small" type="info">
-        提示：请在结束绘制后编辑覆盖物，否则<br />
-        会出现覆盖物无法编辑的bug；<br />
-        修改圆形覆盖物的填充颜色和填充透明度<br />
-        会出现bug；<br />
+        提示：请在结束绘制后点击覆盖物编辑，<br />
+        否则会出现覆盖物无法编辑的bug；<br />
+        修改覆盖物的填充颜色和填充透明度会出<br />
+        现bug；<br />
         显示和隐藏标签的右键菜单有时会消失；<br />
         再次打开右键菜单即可显示
       </el-text>
